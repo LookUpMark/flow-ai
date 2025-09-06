@@ -14,6 +14,7 @@ const DEFAULTS: AppSettings = {
             model: 'llama3',
         },
     },
+    reasoningModeEnabled: true,
 };
 
 const SETTINGS_KEY = 'obsidian-knowledge-architect-settings';

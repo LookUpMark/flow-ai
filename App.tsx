@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { runKnowledgePipeline, generateTitle, PipelineError } from './services/aiService';
-import type { Stage, StageOutputs, AppError, ModelConfigType, AppSettings } from './types';
+import { runKnowledgePipeline, generateTitle, PipelineError, PipelineUpdate } from './services/aiService';
+import type { Stage, StageOutputs, AppError, ModelConfigType } from './types';
 import { useSettings } from './hooks/useSettings';
 import { InputPanel } from './components/InputPanel';
 import { OutputPanel } from './components/OutputPanel';
@@ -70,18 +70,34 @@ const App: React.FC = () => {
         }
 
         try {
-            await runKnowledgePipeline(
+            const pipelineStream = runKnowledgePipeline(
                 combinedInput,
                 topic,
-                (stage, data) => {
-                    setOutputs(prev => ({ ...prev, [stage]: data }));
-                    setLoadingStage(stage);
-                },
                 generateDiagrams && settings.provider === 'gemini',
                 generateHtmlPreview,
                 modelConfig,
                 settings
             );
+
+            for await (const update of pipelineStream) {
+                switch (update.type) {
+                    case 'stage_start':
+                        setLoadingStage(update.stage);
+                        break;
+                    case 'chunk':
+                        setOutputs(prev => ({
+                            ...prev,
+                            [update.stage]: (prev[update.stage] || '') + update.content
+                        }));
+                        break;
+                    case 'stage_end':
+                        // Final content is built from chunks, but we could use this if needed
+                        break;
+                    case 'skipped':
+                        setOutputs(prev => ({ ...prev, [update.stage]: 'Skipped' }));
+                        break;
+                }
+            }
             setLoadingStage(null);
         } catch (err) {
             console.error("Pipeline execution failed:", err);
@@ -150,6 +166,8 @@ const App: React.FC = () => {
                     provider={settings.provider}
                     modelConfig={modelConfig}
                     setModelConfig={setModelConfig}
+                    reasoningModeEnabled={settings.reasoningModeEnabled}
+                    setReasoningModeEnabled={(value) => saveSettings({ ...settings, reasoningModeEnabled: value })}
                 />
                 <OutputPanel
                     outputs={outputs}

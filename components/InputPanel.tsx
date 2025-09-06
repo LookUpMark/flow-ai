@@ -22,6 +22,8 @@ interface InputPanelProps {
     provider: ApiProvider;
     modelConfig: ModelConfigType;
     setModelConfig: (value: ModelConfigType) => void;
+    reasoningModeEnabled: boolean;
+    setReasoningModeEnabled: (value: boolean) => void;
 }
 
 const GenerateIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -34,7 +36,8 @@ const GenerateIcon: React.FC<{ className?: string }> = ({ className }) => (
 export const InputPanel: React.FC<InputPanelProps> = ({
     topic, setTopic, rawText, setRawText, onFileChange, onGenerate, isLoading, error, setError,
     onGenerateTitle, isGeneratingTitle, hasContent, generateDiagrams, setGenerateDiagrams,
-    generateHtmlPreview, setGenerateHtmlPreview, provider, modelConfig, setModelConfig
+    generateHtmlPreview, setGenerateHtmlPreview, provider, modelConfig, setModelConfig,
+    reasoningModeEnabled, setReasoningModeEnabled
 }) => {
 
     const handleClearError = () => {
@@ -43,6 +46,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
 
     const canGenerateTitle = hasContent && !isLoading && !isGeneratingTitle;
     const isDiagramGenerationDisabled = provider !== 'gemini';
+    const isReasoningModeDisabled = provider === 'ollama';
     
     return (
         <div className="bg-card text-card-foreground border rounded-lg p-6 flex flex-col gap-6 h-full shadow-lg shadow-black/20">
@@ -131,6 +135,29 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                         <p className="text-sm text-muted-foreground">"Pro" provides better results but is slower. "Flash" is faster for quick iterations.</p>
                     </div>
                  )}
+                <div 
+                    className={`flex items-center justify-between bg-muted/30 p-4 rounded-lg border border-input transition-opacity ${isReasoningModeDisabled ? 'opacity-60' : ''}`}
+                    title={isReasoningModeDisabled ? "Reasoning mode is not available for the Ollama provider." : "Toggles creative/reasoning capabilities. Disabling it may result in faster, more deterministic responses."}
+                >
+                    <label htmlFor="reasoning-mode-toggle" className={`flex flex-col flex-grow pr-4 ${isReasoningModeDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                        <span className="font-medium text-foreground">Enable Reasoning Mode</span>
+                        <span className="text-sm text-muted-foreground">Higher quality vs. faster, more deterministic output.</span>
+                    </label>
+                    <button
+                        type="button"
+                        id="reasoning-mode-toggle"
+                        onClick={() => !isReasoningModeDisabled && setReasoningModeEnabled(!reasoningModeEnabled)}
+                        className={`${reasoningModeEnabled && !isReasoningModeDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card disabled:cursor-not-allowed`}
+                        role="switch"
+                        aria-checked={reasoningModeEnabled}
+                        disabled={isLoading || isReasoningModeDisabled}
+                    >
+                        <span
+                            aria-hidden="true"
+                            className={`${reasoningModeEnabled && !isReasoningModeDisabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                        />
+                    </button>
+                </div>
                 <div 
                     className={`flex items-center justify-between bg-muted/30 p-4 rounded-lg border border-input transition-opacity ${isDiagramGenerationDisabled ? 'opacity-60' : ''}`}
                     title={isDiagramGenerationDisabled ? "Diagram generation is only available with the Gemini provider." : ""}

@@ -6,7 +6,7 @@ if (!process.env.API_KEY) {
     console.warn("API_KEY environment variable not set. Gemini provider will not work.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
 export class PipelineError extends Error {
     constructor(
@@ -69,70 +69,49 @@ const withRetry = async <T>(apiCall: () => Promise<T>, operationName: string): P
     throw lastError!;
 };
 
-const generateWithGemini = async (prompt: string, modelConfig: ModelConfigType, temperature: number): Promise<string> => {
-    const genAIConfig: { temperature: number; thinkingConfig?: { thinkingBudget: number } } = { temperature };
-    if (modelConfig === 'flash') {
-        genAIConfig.thinkingConfig = { thinkingBudget: 0 };
-    }
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: genAIConfig
-    });
-    return response.text;
-};
-
-const generateWithOpenRouter = async (prompt: string, settings: AppSettings, temperature: number): Promise<string> => {
-    const { apiKey, model } = settings.config.openrouter;
-    if (!apiKey || !model) throw new Error("OpenRouter API key and model must be configured in settings.");
+// Non-streaming version for single-shot generations like titles.
+const generateText = async (prompt: string, settings: AppSettings, modelConfig: ModelConfigType, baseTemperature: number): Promise<string> => {
+    let effectiveTemperature = baseTemperature;
+    const genAIConfig: { temperature: number; thinkingConfig?: { thinkingBudget: number } } = { temperature: effectiveTemperature };
     
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://obsidian-knowledge-architect.web.app', // Required by OpenRouter
-            'X-Title': 'Obsidian Knowledge Architect', // Required by OpenRouter
-        },
-        body: JSON.stringify({
-            model: model,
-            messages: [{ role: 'user', content: prompt }],
-            temperature: temperature,
-        })
-    });
-    if (!response.ok) throw response;
-    const data = await response.json();
-    return data.choices[0].message.content;
-};
-
-const generateWithOllama = async (prompt: string, settings: AppSettings, temperature: number): Promise<string> => {
-    const { baseUrl, model } = settings.config.ollama;
-    if (!baseUrl || !model) throw new Error("Ollama Base URL and model must be configured in settings.");
-
-    const response = await fetch(`${baseUrl}/api/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            model: model,
-            prompt: prompt,
-            stream: false,
-            options: { temperature },
-        })
-    });
-    if (!response.ok) throw response;
-    const data = await response.json();
-    return data.response;
-};
-
-const generateText = async (prompt: string, settings: AppSettings, modelConfig: ModelConfigType, temperature: number): Promise<string> => {
-    const apiCall = () => {
+    if (!settings.reasoningModeEnabled) {
+        if (settings.provider === 'gemini' && modelConfig === 'flash') {
+            genAIConfig.thinkingConfig = { thinkingBudget: 0 };
+        } else if (settings.provider === 'openrouter') {
+            effectiveTemperature = 0.1;
+        }
+    }
+    
+    const apiCall = async (): Promise<string> => {
         switch (settings.provider) {
-            case 'gemini':
-                return generateWithGemini(prompt, modelConfig, temperature);
-            case 'openrouter':
-                return generateWithOpenRouter(prompt, settings, temperature);
-            case 'ollama':
-                return generateWithOllama(prompt, settings, temperature);
+            case 'gemini': {
+                const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: genAIConfig });
+                return response.text;
+            }
+            case 'openrouter': {
+                const { apiKey, model } = settings.config.openrouter;
+                if (!apiKey || !model) throw new Error("OpenRouter API key and model must be configured in settings.");
+                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://obsidian-knowledge-architect.web.app', 'X-Title': 'Obsidian Knowledge Architect' },
+                    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: effectiveTemperature, stream: false })
+                });
+                if (!response.ok) throw response;
+                const data = await response.json();
+                return data.choices[0].message.content;
+            }
+            case 'ollama': {
+                const { baseUrl, model } = settings.config.ollama;
+                if (!baseUrl || !model) throw new Error("Ollama Base URL and model must be configured in settings.");
+                const response = await fetch(`${baseUrl}/api/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model, prompt, stream: false, options: { temperature: effectiveTemperature } })
+                });
+                if (!response.ok) throw response;
+                const data = await response.json();
+                return data.response;
+            }
             default:
                 throw new Error(`Unsupported provider: ${settings.provider}`);
         }
@@ -140,19 +119,88 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
     return withRetry(apiCall, `generateText(provider=${settings.provider})`);
 };
 
-const runStage = async (promptTemplate: string, previousOutput: string, topic: string, outputIsHtml: boolean, modelConfig: ModelConfigType, settings: AppSettings): Promise<string> => {
-    const fullPrompt = `CONTEXT TOPIC: "${topic}"\n---\n${promptTemplate}\n---\nPREVIOUS STAGE CONTENT TO PROCESS:\n\`\`\`markdown\n${previousOutput}\n\`\`\``;
-    const temperature = outputIsHtml ? 0.2 : 0.6;
-    const text = await generateText(fullPrompt, settings, modelConfig, temperature);
+async function* generateTextStream(prompt: string, settings: AppSettings, modelConfig: ModelConfigType, baseTemperature: number): AsyncGenerator<string> {
+    let effectiveTemperature = baseTemperature;
+    const genAIConfig: { temperature: number; thinkingConfig?: { thinkingBudget: number } } = { temperature: effectiveTemperature };
+    
+    if (!settings.reasoningModeEnabled) {
+        if (settings.provider === 'gemini' && modelConfig === 'flash') {
+            genAIConfig.thinkingConfig = { thinkingBudget: 0 };
+        } else if (settings.provider === 'openrouter') {
+            effectiveTemperature = 0.1;
+        }
+    }
 
-    if (typeof text !== 'string' || !text.trim()) {
-        throw new Error('Received an empty or invalid response from the API.');
+    switch (settings.provider) {
+        case 'gemini': {
+            const response = await ai.models.generateContentStream({ model: 'gemini-2.5-flash', contents: prompt, config: genAIConfig });
+            for await (const chunk of response) {
+                yield chunk.text;
+            }
+            break;
+        }
+        case 'openrouter': {
+            const { apiKey, model } = settings.config.openrouter;
+            if (!apiKey || !model) throw new Error("OpenRouter API key and model must be configured in settings.");
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://obsidian-knowledge-architect.web.app', 'X-Title': 'Obsidian Knowledge Architect' },
+                body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: effectiveTemperature, stream: true })
+            });
+            if (!response.ok || !response.body) throw response;
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n').filter(line => line.trim().startsWith('data: '));
+                for (const line of lines) {
+                    const jsonStr = line.replace('data: ', '');
+                    if (jsonStr === '[DONE]') continue;
+                    try {
+                        const parsed = JSON.parse(jsonStr);
+                        yield parsed.choices[0]?.delta?.content || '';
+                    } catch (e) {
+                        console.error("Failed to parse stream chunk:", jsonStr);
+                    }
+                }
+            }
+            break;
+        }
+        case 'ollama': {
+            const { baseUrl, model } = settings.config.ollama;
+            if (!baseUrl || !model) throw new Error("Ollama Base URL and model must be configured in settings.");
+            const response = await fetch(`${baseUrl}/api/generate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model, prompt, stream: true, options: { temperature: effectiveTemperature } })
+            });
+            if (!response.ok || !response.body) throw response;
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n').filter(Boolean);
+                for (const line of lines) {
+                    try {
+                        const parsed = JSON.parse(line);
+                        yield parsed.response || '';
+                    } catch (e) {
+                         console.error("Failed to parse stream chunk:", line);
+                    }
+                }
+            }
+            break;
+        }
+        default:
+            throw new Error(`Unsupported provider for streaming: ${settings.provider}`);
     }
-    if (outputIsHtml) {
-        return text.replace(/^```html\s*/, '').replace(/```\s*$/, '').trim();
-    }
-    return text.replace(/^```markdown\s*/, '').replace(/```\s*$/, '').trim();
-};
+}
 
 const createDiagramPrompt = async (mermaidCode: string, modelConfig: ModelConfigType, settings: AppSettings): Promise<string> => {
     const prompt = `**Role:** You are a "Diagram Describer". Your task is to convert Mermaid.js code into a detailed, descriptive text prompt that an image generation AI can understand.\n**Directives:**\n1. Analyze the provided Mermaid.js code to understand the structure, components, and relationships of the diagram.\n2. Describe the diagram in natural language. Be specific about the shapes, text, arrows, and layout.\n3. The description should be a single, coherent paragraph.\n4. Focus on the visual representation.\n5. The final output should be a prompt that starts with "A diagram of...".\n6. **Strict Output Format:** Your entire response must be *only* the raw text of the prompt. Do not include any conversational text or comments.\n---\nMERMAID CODE TO DESCRIBE:\n\`\`\`mermaid\n${mermaidCode}\n\`\`\``;
@@ -179,28 +227,6 @@ const generateDiagramImage = async (mermaidCode: string, modelConfig: ModelConfi
     return base64ImageBytes;
 };
 
-const runDiagramGeneratorStage = async (markdownContent: string, modelConfig: ModelConfigType, settings: AppSettings): Promise<string> => {
-    const mermaidRegex = /```mermaid\r?\n([\s\S]*?)\r?\n```/g;
-    const parts = markdownContent.split(mermaidRegex);
-    if (parts.length <= 1) return markdownContent;
-
-    const mermaidCodes = parts.filter((_, i) => i % 2 === 1);
-    const textParts = parts.filter((_, i) => i % 2 === 0);
-    const base64Images: string[] = [];
-
-    for (const code of mermaidCodes) {
-        const image = await generateDiagramImage(code, modelConfig, settings);
-        base64Images.push(image);
-        if (mermaidCodes.length > 1) await delay(1500);
-    }
-
-    let result = textParts[0];
-    for (let i = 0; i < base64Images.length; i++) {
-        result += `![Mermaid Diagram](data:image/jpeg;base64,${base64Images[i]})` + textParts[i + 1];
-    }
-    return result;
-};
-
 export const generateTitle = async (content: string, modelConfig: ModelConfigType, settings: AppSettings): Promise<string> => {
     if (!content.trim()) throw new Error("Cannot generate a title from empty content.");
     const prompt = `**Role:** You are a "Title Architect". Your task is to create a clear, concise, and descriptive title for a knowledge base note.\n**Input:** A body of raw text.\n**Directives:**\n1. Analyze the provided text to understand its main subject and key concepts.\n2. Generate a title that accurately summarizes the content.\n3. The title should be suitable for a system like Obsidian or a personal knowledge base.\n4. **Strict Output Format:** Your entire response must be *only* the raw text of the title.\n---\nTEXT TO ANALYZE:\n\`\`\`\n${content}\n\`\`\``;
@@ -209,18 +235,21 @@ export const generateTitle = async (content: string, modelConfig: ModelConfigTyp
     return text.trim();
 };
 
-export const runKnowledgePipeline = async (
+export type PipelineUpdate = 
+    | { type: 'stage_start', stage: Stage }
+    | { type: 'chunk', stage: Stage, content: string }
+    | { type: 'stage_end', stage: Stage, fullContent: string }
+    | { type: 'skipped', stage: Stage };
+
+export async function* runKnowledgePipeline(
     rawInput: string,
     topic: string,
-    updateCallback: (stage: Stage, data: string) => void,
     generateDiagrams: boolean,
     generateHtmlPreview: boolean,
     modelConfig: ModelConfigType,
     settings: AppSettings
-): Promise<void> => {
+): AsyncGenerator<PipelineUpdate> {
     let currentContent = rawInput;
-
-    // FIX: Explicitly type the pipeline stages to ensure `stage` is of type `Stage`, not `string`.
     const pipelineStages: { stage: Stage; prompt: string }[] = [
         { stage: 'synthesizer', prompt: STAGE_PROMPTS.synthesizer },
         { stage: 'condenser', prompt: STAGE_PROMPTS.condenser },
@@ -231,9 +260,17 @@ export const runKnowledgePipeline = async (
     
     for (const { stage, prompt } of pipelineStages) {
         try {
-            updateCallback(stage, '');
-            currentContent = await runStage(prompt, currentContent, topic, false, modelConfig, settings);
-            updateCallback(stage, currentContent);
+            yield { type: 'stage_start', stage };
+            let stageOutput = '';
+            const fullPrompt = `CONTEXT TOPIC: "${topic}"\n---\n${prompt}\n---\nPREVIOUS STAGE CONTENT TO PROCESS:\n\`\`\`markdown\n${currentContent}\n\`\`\``;
+            const stream = generateTextStream(fullPrompt, settings, modelConfig, 0.6);
+            for await (const chunk of stream) {
+                const sanitizedChunk = chunk.replace(/^```(markdown|html)\s*|```\s*$/g, '');
+                stageOutput += sanitizedChunk;
+                yield { type: 'chunk', stage, content: sanitizedChunk };
+            }
+            currentContent = stageOutput.trim();
+            yield { type: 'stage_end', stage, fullContent: currentContent };
         } catch (error) {
             throw new PipelineError(`Error during the '${stage}' stage`, stage, error);
         }
@@ -241,26 +278,51 @@ export const runKnowledgePipeline = async (
 
     if (generateDiagrams) {
         try {
-            updateCallback('diagramGenerator', '');
-            const finalMarkdownWithDiagrams = await runDiagramGeneratorStage(currentContent, modelConfig, settings);
-            updateCallback('diagramGenerator', finalMarkdownWithDiagrams);
-            currentContent = finalMarkdownWithDiagrams;
+            yield { type: 'stage_start', stage: 'diagramGenerator' };
+            const mermaidRegex = /```mermaid\r?\n([\s\S]*?)\r?\n```/g;
+            const parts = currentContent.split(mermaidRegex);
+            if (parts.length > 1) {
+                const mermaidCodes = parts.filter((_, i) => i % 2 === 1);
+                const textParts = parts.filter((_, i) => i % 2 === 0);
+                const base64Images: string[] = [];
+
+                for (const code of mermaidCodes) {
+                    const image = await generateDiagramImage(code, modelConfig, settings);
+                    base64Images.push(image);
+                    if (mermaidCodes.length > 1) await delay(1500);
+                }
+                let result = textParts[0];
+                for (let i = 0; i < base64Images.length; i++) {
+                    result += `![Mermaid Diagram](data:image/jpeg;base64,${base64Images[i]})` + textParts[i + 1];
+                }
+                currentContent = result;
+            }
+            yield { type: 'chunk', stage: 'diagramGenerator', content: currentContent };
+            yield { type: 'stage_end', stage: 'diagramGenerator', fullContent: currentContent };
         } catch (error) {
             throw new PipelineError("Error generating diagram images", 'diagramGenerator', error);
         }
     } else {
-        updateCallback('diagramGenerator', 'Skipped');
+        yield { type: 'skipped', stage: 'diagramGenerator' };
     }
 
     if (generateHtmlPreview) {
         try {
-            updateCallback('htmlTranslator', '');
-            const finalHtml = await runStage(STAGE_PROMPTS.htmlTranslator, currentContent, topic, true, modelConfig, settings);
-            updateCallback('htmlTranslator', finalHtml);
+            yield { type: 'stage_start', stage: 'htmlTranslator' };
+            let htmlOutput = '';
+            const fullPrompt = `CONTEXT TOPIC: "${topic}"\n---\n${STAGE_PROMPTS.htmlTranslator}\n---\nPREVIOUS STAGE CONTENT TO PROCESS:\n\`\`\`markdown\n${currentContent}\n\`\`\``;
+            const stream = generateTextStream(fullPrompt, settings, modelConfig, 0.2);
+            for await (const chunk of stream) {
+                const sanitizedChunk = chunk.replace(/^```(markdown|html)\s*|```\s*$/g, '');
+                htmlOutput += sanitizedChunk;
+                yield { type: 'chunk', stage: 'htmlTranslator', content: sanitizedChunk };
+            }
+            currentContent = htmlOutput.trim();
+            yield { type: 'stage_end', stage: 'htmlTranslator', fullContent: currentContent };
         } catch (error) {
             throw new PipelineError("Error generating HTML preview", 'htmlTranslator', error);
         }
     } else {
-        updateCallback('htmlTranslator', 'Skipped');
+        yield { type: 'skipped', stage: 'htmlTranslator' };
     }
-};
+}

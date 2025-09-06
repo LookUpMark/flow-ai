@@ -52,4 +52,5 @@ export interface ProviderSettings {
 export interface AppSettings {
     provider: ApiProvider;
     config: ProviderSettings;
+    reasoningModeEnabled: boolean;
 }
