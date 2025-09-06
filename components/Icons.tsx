@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 
 export const BrainIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
@@ -58,5 +59,15 @@ export const DownloadIcon: React.FC<{ className?: string }> = ({ className = "w-
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
         <polyline points="7 10 12 15 17 10" />
         <line x1="12" x2="12" y1="15" y2="3" />
+    </svg>
+);
+
+export const SparklesIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M12 3L9.5 8.5 4 11l5.5 2.5L12 19l2.5-5.5L20 11l-5.5-2.5z"/>
+        <path d="M5 3v4"/>
+        <path d="M19 17v4"/>
+        <path d="M3 19h4"/>
+        <path d="M17 5h4"/>
     </svg>
 );

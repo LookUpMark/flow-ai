@@ -46,6 +46,50 @@ const runStage = async (promptTemplate: string, previousOutput: string, topic: s
     }
 };
 
+export const generateTitle = async (content: string): Promise<string> => {
+    if (!content.trim()) {
+        throw new Error("Cannot generate a title from empty content.");
+    }
+    
+    const prompt = `
+        **Role:** You are a "Title Architect". Your task is to create a clear, concise, and descriptive title for a knowledge base note.
+        **Input:** A body of raw text.
+        **Directives:**
+        1. Analyze the provided text to understand its main subject and key concepts.
+        2. Generate a title that accurately summarizes the content.
+        3. The title should be suitable for a system like Obsidian or a personal knowledge base.
+        4. **Strict Output Format:** Your entire response must be *only* the raw text of the title. Do not include any conversational text, quotation marks, headings, or comments like "Here is the generated title".
+        
+        ---
+        TEXT TO ANALYZE:
+        \`\`\`
+        ${content}
+        \`\`\`
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                temperature: 0.4, // Lower temperature for more deterministic/factual titling
+            }
+        });
+
+        const text = response.text;
+        if (typeof text !== 'string' || !text.trim()) {
+            throw new Error('Received an empty or invalid response from the API.');
+        }
+
+        return text.trim();
+
+    } catch (error) {
+        console.error("Error calling Gemini API for title generation:", error);
+        throw new Error(`Title generation API call failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+};
+
+
 export const runKnowledgePipeline = async (
     rawInput: string,
     topic: string,

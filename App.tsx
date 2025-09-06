@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { runKnowledgePipeline } from './services/geminiService';
+import { runKnowledgePipeline, generateTitle } from './services/geminiService';
 import type { Stage, StageOutputs } from './types';
 import { InputPanel } from './components/InputPanel';
 import { OutputPanel } from './components/OutputPanel';
@@ -21,6 +21,7 @@ const App: React.FC = () => {
 
     const [loadingStage, setLoadingStage] = useState<Stage | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
 
     const handleGenerate = useCallback(async () => {
         setError(null);
@@ -46,12 +47,44 @@ const App: React.FC = () => {
             // Log the detailed technical error for developers/debugging.
             console.error("Pipeline execution failed:", err);
             
-            // Provide a more user-friendly message.
-            const userFriendlyMessage = "An unexpected error occurred while generating the note. Please try again. For technical details, please check the browser's developer console.";
-            setError(userFriendlyMessage);
+            // Provide a more user-friendly message based on the error type.
+            let userMessage = "An unexpected error occurred while generating the note. Please try again.";
+            if (err instanceof Error) {
+                if (err.message.includes('API call failed')) {
+                    userMessage = "Failed to communicate with the AI service. Please check your network and try again.";
+                } else if (err.message.includes('empty or invalid response')) {
+                    userMessage = "The AI service returned an unexpected response. Please try modifying your input or try again later.";
+                }
+            }
+            setError(userMessage);
             setLoadingStage(null);
         }
     }, [topic, rawText, fileContent]);
+    
+    const handleGenerateTitle = useCallback(async () => {
+        setError(null);
+        const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
+        if (!combinedInput.trim()) {
+            setError('Please provide some input text or a file to generate a title.');
+            return;
+        }
+
+        setIsGeneratingTitle(true);
+        try {
+            const newTitle = await generateTitle(combinedInput);
+            setTopic(newTitle);
+        } catch (err) {
+            console.error("Title generation failed:", err);
+            let userMessage = "Failed to generate title. Please try again.";
+            if (err instanceof Error && err.message.includes('API call failed')) {
+                userMessage = "Could not connect to the AI service to generate a title.";
+            }
+            setError(userMessage);
+        } finally {
+            setIsGeneratingTitle(false);
+        }
+    }, [rawText, fileContent]);
+
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -70,6 +103,7 @@ const App: React.FC = () => {
     };
 
     const isLoading = loadingStage !== null;
+    const hasContent = !!(fileContent.trim() || rawText.trim());
 
     return (
         <div className="min-h-screen flex flex-col font-sans">
@@ -85,6 +119,9 @@ const App: React.FC = () => {
                     isLoading={isLoading}
                     error={error}
                     setError={setError}
+                    onGenerateTitle={handleGenerateTitle}
+                    isGeneratingTitle={isGeneratingTitle}
+                    hasContent={hasContent}
                 />
                 <OutputPanel
                     outputs={outputs}

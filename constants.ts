@@ -13,6 +13,7 @@ export const STAGE_PROMPTS = {
             - Group ideas into coherent paragraphs.
             - Use bulleted ('*') or numbered ('1.') lists where appropriate.
         4. **Absolute Completeness:** At this stage, the priority is completeness, not conciseness. **Do not omit anything.** Every detail, even if seemingly minor, must be included in the structure.
+        5. **Strict Output Format:** Your entire response must be *only* the raw Markdown content. Do not include any conversational text, headings, or comments like "Here is the synthesized markdown". Your output will be directly passed to the next agent.
         **Output:** A single, well-organized, and complete Markdown (.md) file, serving as a "master draft" for the rest of the workflow.
     `,
     condenser: `
@@ -23,6 +24,7 @@ export const STAGE_PROMPTS = {
         2. **Eliminate Verbosity:** Remove filler words, redundant phrases, passive constructions, and circumlocutions. Replace long phrases with shorter, more direct equivalents.
         3. **Conceptual Consolidation:** If two paragraphs or sentences express the exact same idea without adding new details, merge them into a single, concise statement.
         4. **Absolute Prohibition of Omissions:** This is your most important rule. Every unit of information, every piece of data, every unique concept present in the input **must be preserved**. The text must become more information-dense, not poorer.
+        5. **Strict Output Format:** Your entire response must be *only* the raw Markdown content. Do not include any conversational text, headings, or comments like "Here is the condensed text". Your output will be directly passed to the next agent.
         **Output:** A shorter, denser, and more direct version of the text that retains 100% of the original information.
     `,
     enhancer: `
@@ -36,6 +38,7 @@ export const STAGE_PROMPTS = {
             - **Equations:** Write mathematical formulas using LaTeX syntax ('$inline_formula$' or '$$block_formula$$').
             - **Tables:** Organize comparative or structured data into Markdown tables.
             - **Mermaid Diagrams:** Create flowcharts, sequence diagrams, or architecture diagrams using Mermaid syntax (in \`\`\`mermaid blocks) to visualize complex processes and relationships.
+        4. **Strict Output Format:** Your entire response must be *only* the raw Markdown content. Do not include any conversational text or comments. Your output will be directly passed to the next agent.
         **Output:** A Markdown document that is not only concise but also extremely clear, easy to follow, and enriched with visual and practical aids.
     `,
     mermaidValidator: `
@@ -47,6 +50,7 @@ export const STAGE_PROMPTS = {
         2. **Rigorous Validation:** For each block, compare the syntax used (nodes, arrows, directions, diagram types, etc.) with the specifications in the official Mermaid.js documentation. Verify that graph types (e.g., \`graph TD\`, \`sequenceDiagram\`) are valid and their specific syntaxes are strictly followed.
         3. **Correction and Optimization:** If you find syntax errors, correct them based on the documentation's rules. If the syntax is deprecated, update it to the current recommended version.
         4. **No Logical Alteration:** Your task is purely syntactic. You must not modify the meaning or logical structure of the diagram intended by the previous agent. You must only ensure it is technically correct.
+        5. **Strict Output Format:** Your entire response must be *only* the raw Markdown content. Do not include any conversational text or comments. Your output will be directly passed to the next agent.
         **Output:** The entire Markdown document with all Mermaid blocks validated, corrected, and ready for error-free rendering.
     `,
     finalizer: `
@@ -75,6 +79,7 @@ export const STAGE_PROMPTS = {
                 - Key terms should be in **bold** only on their first appearance.
                 - Definitions of important concepts must always be placed in a '> [!definition]' callout.
                 - Lists of pros/cons or features must always use bullet points.
+        4. **Strict Output Format:** Your entire response must be *only* the raw Markdown content, starting with the YAML frontmatter. Do not include any conversational text or comments.
         **Output:** The final, flawless Markdown file, perfectly formatted for Obsidian, standardized, and ready to be archived in the vault.
     `
 };
