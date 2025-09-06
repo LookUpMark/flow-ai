@@ -60,6 +60,7 @@ const App: React.FC = () => {
     const [loadingStage, setLoadingStage] = useState<Stage | null>(null);
     const [error, setError] = useState<AppError | null>(null);
     const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
+    const [throughput, setThroughput] = useState<number>(0);
 
     const [settings, saveSettings] = useSettings();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -67,12 +68,16 @@ const App: React.FC = () => {
     const handleGenerate = useCallback(async () => {
         setError(null);
         setOutputs({ synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', diagramGenerator: '', finalizer: '', htmlTranslator: '' });
+        setThroughput(0);
 
         const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
         if (!topic.trim() || !combinedInput.trim()) {
             setError({ context: 'setup', message: 'Please provide a topic and some input text or a file.' });
             return;
         }
+
+        let totalChars = 0;
+        const startTime = Date.now();
 
         try {
             const pipelineStream = runKnowledgePipeline(
@@ -94,6 +99,13 @@ const App: React.FC = () => {
                             ...prev,
                             [update.stage]: (prev[update.stage] || '') + update.content
                         }));
+                        totalChars += update.content.length;
+                        const elapsedSeconds = (Date.now() - startTime) / 1000;
+                        if (elapsedSeconds > 0.2) { // Avoid division by zero and noisy initial values
+                           const charsPerSecond = totalChars / elapsedSeconds;
+                           const tokensPerSecond = charsPerSecond / 4; // Approx. 4 chars per token
+                           setThroughput(tokensPerSecond);
+                        }
                         break;
                     case 'stage_end':
                         // Final content is built from chunks, but we could use this if needed
@@ -246,6 +258,7 @@ const App: React.FC = () => {
                     error={error}
                     generateDiagrams={generateDiagrams && settings.provider === 'gemini'}
                     generateHtmlPreview={generateHtmlPreview}
+                    throughput={throughput}
                 />
             </main>
             <Footer />

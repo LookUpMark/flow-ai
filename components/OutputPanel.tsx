@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Stage, StageOutputs, AppError, StageStatus } from '../types';
 import { StageDisplay } from './StageDisplay';
@@ -11,6 +12,7 @@ interface OutputPanelProps {
     error: AppError | null;
     generateDiagrams: boolean;
     generateHtmlPreview: boolean;
+    throughput: number;
 }
 
 const STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
@@ -25,7 +27,7 @@ const STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
 
 const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'diagramGenerator', 'htmlTranslator'];
 
-export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic, error, generateDiagrams, generateHtmlPreview }) => {
+export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic, error, generateDiagrams, generateHtmlPreview, throughput }) => {
     const [activeTab, setActiveTab] = useState<Stage>('synthesizer');
     
     const isPipelineRunning = loadingStage !== null;
@@ -107,11 +109,18 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
 
             {hasPipelineStarted && (
                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-1">
+                    <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-primary/90">
                             {error ? 'Pipeline Failed' : loadingStage ? `Running: ${loadingStage}` : 'Pipeline Complete'}
                         </span>
                         <span className="text-sm font-medium text-muted-foreground">{Math.round(progress)}% Complete</span>
+                    </div>
+                    <div className="h-5 mb-2 flex items-center justify-center">
+                        {throughput > 0 && (
+                            <p className="text-center text-sm text-muted-foreground animate-in fade-in-0">
+                                ~{throughput.toFixed(0)} tokens/sec
+                            </p>
+                        )}
                     </div>
                     <div className={`w-full bg-muted rounded-full h-2 ${error ? 'bg-destructive/20' : ''}`}>
                         <div className={`${error ? 'bg-destructive' : 'bg-primary'} h-2 rounded-full transition-all duration-500 ease-out`} style={{ width: `${progress}%` }}></div>
