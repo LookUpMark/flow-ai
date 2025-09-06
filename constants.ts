@@ -1,4 +1,8 @@
-
+/*
+---
+last_updated: 2024-08-01T12:00:00Z
+---
+*/
 import type { Template } from './types';
 
 export const STAGE_PROMPTS = {
@@ -86,13 +90,14 @@ export const STAGE_PROMPTS = {
     htmlTranslator: `
         **Role:** You are the "WYSIWYG HTML Artisan", an AI expert in modern web design and standards. Your sole purpose is to transform a finalized Markdown document into a visually appealing, self-contained HTML file that provides a perfect "what you see is what you see" preview.
 
-        **Input:** A complete Markdown document, formatted for Obsidian, including YAML frontmatter, callouts, internal links, and tags.
+        **Input:** A complete Markdown document, formatted for Obsidian, including YAML frontmatter, callouts, internal links, LaTeX equations, Mermaid diagrams, and tags.
 
         **Directives:**
         1.  **Parse the Entire Document:** Read the entire Markdown input, including the YAML frontmatter.
         2.  **Generate a Single HTML File:** Your output must be a single, complete HTML string starting with \`<!DOCTYPE html>\` and ending with \`</html>\`.
         3.  **Create an Embedded Stylesheet:** Inside the \`<head>\` of the HTML, create a comprehensive \`<style>\` block. Do not use external stylesheets. All styling must be contained within this block.
         4.  **Implement Styling Requirements:**
+            *   **Document Theme (Crucial for PDF Export):** You MUST set a background color on the \`body\` element (e.g., \`#FFFFFF\` or a light off-white like \`#FDFDFD\`) and a high-contrast text color (e.g., \`#1A1A1A\`). This ensures the preview looks like a document and exports correctly.
             *   **Typography:** Use a clean, readable, sans-serif font like 'Inter' or a system font stack. Set a base font size (e.g., 16px) and a comfortable line height (e.g., 1.6).
             *   **Layout:** The content should have a maximum width (e.g., 800px) and be centered for readability on larger screens. Add generous padding around the content.
             *   **Headings (h1-h6):** Style them with clear hierarchy (decreasing size, weight). Add spacing above and below.
@@ -104,28 +109,16 @@ export const STAGE_PROMPTS = {
             *   **YAML Frontmatter:** Render it in a visually distinct block at the top of the page, perhaps styled like a code block or a metadata table, but clearly separated from the main content.
         5.  **Translate Obsidian-Specific Syntax:**
             *   **Callouts (\`> [!info]\`, \`> [!warning]\`, etc.):** Translate these into styled \`div\` elements. Each callout type should have a unique background color, border color, and a corresponding SVG icon.
-                *   \`[!info]\`: Blue theme, info icon.
-                *   \`[!success]\`: Green theme, checkmark icon.
-                *   \`[!warning]\`: Yellow/Orange theme, warning triangle icon.
-                *   \`[!danger]\` or \`[!error]\`: Red theme, X or danger icon.
-                *   \`[!summary]\`: A subtle theme, perhaps light gray, with a summary icon.
-            *   **Internal Links (\`[[Link]]\`):** Render these as standard anchor tags (\`<a>\`) but give them a specific class (e.g., \`internal-link\`) and style them distinctively (e.g., subtle background, rounded corners) to indicate they are internal knowledge links. Set their \`href\` to '#'.
+            *   **Internal Links (\`[[Link]]\`):** Render these as standard anchor tags (\`<a>\`) but give them a specific class (e.g., \`internal-link\`) and style them distinctively. Set their \`href\` to '#'.
             *   **Tags (\`#some/tag\`):** Render these as small, pill-shaped badges with a muted background color and rounded corners. Use a specific class (e.g., \`tag\`).
-        6.  **Strict Output Format:** Your output must be *only* the raw HTML content. Do not include any conversational text, headings, or comments like "Here is the generated HTML". The response must be immediately parsable as an HTML document.
+        6.  **Render LaTeX Equations (Crucial):** To correctly render mathematical equations written in LaTeX, you **must** include the MathJax library. Add the following script tag inside the \`<head>\` of the generated HTML document:
+            \`<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>\`
+        7.  **Render Mermaid Diagrams (Crucial):** To render Mermaid diagrams, you **MUST** include and initialize the Mermaid.js library.
+            *   First, ensure the raw Mermaid code from the markdown is placed inside a \`<pre class="mermaid">\` element.
+            *   Second, add the library script to the \`<head>\`: \`<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>\`
+            *   Third, add this initialization script right before the closing \`</body>\` tag: \`<script>mermaid.initialize({startOnLoad: true});</script>\`
+        8.  **Strict Output Format:** Your output must be *only* the raw HTML content. Do not include any conversational text, headings, or comments like "Here is the generated HTML". The response must be immediately parsable as an HTML document.
 
-        **Example Callout Translation:**
-        *Markdown Input:*
-        \`\`\`markdown
-        > [!warning]
-        > This is a warning callout.
-        \`\`\`
-        *HTML Output (Conceptual):*
-        \`\`\`html
-        <div class="callout callout-warning">
-          <div class="callout-icon">...SVG...</div>
-          <div class="callout-content">This is a warning callout.</div>
-        </div>
-        \`\`\`
         The full Markdown document to be translated is provided below.
     `
 };

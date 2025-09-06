@@ -60,7 +60,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, onClose, con
                 <header className="flex items-center justify-between p-4 border-b border-border">
                     <h2 className="text-xl font-semibold">Export Preview</h2>
                     <button onClick={onClose} className="p-1 rounded-md hover:bg-accent">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
                 </header>
                 

@@ -26,6 +26,9 @@ export const exportPreviewToPdf = async (element: HTMLElement, topic: string) =>
         autoPaging: 'text',
         width: 515, // A4 width (595) - margins (40*2)
         windowWidth: element.scrollWidth,
+        html2canvas: {
+            backgroundColor: '#FFFFFF', // Force a white background for the PDF export
+        }
     });
 };
 
