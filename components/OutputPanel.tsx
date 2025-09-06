@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Stage, StageOutputs, AppError, StageStatus } from '../types';
 import { StageDisplay } from './StageDisplay';
@@ -15,7 +16,7 @@ interface OutputPanelProps {
     throughput: number;
 }
 
-const STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
+const ALL_STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
     { id: 'synthesizer', title: 'Synthesize', icon: <BrainIcon /> },
     { id: 'condenser', title: 'Condense', icon: <FilterIcon /> },
     { id: 'enhancer', title: 'Enhance', icon: <WandIcon /> },
@@ -30,6 +31,14 @@ const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'merma
 export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic, error, generateDiagrams, generateHtmlPreview, throughput }) => {
     const [activeTab, setActiveTab] = useState<Stage>('synthesizer');
     
+    const visibleStages = useMemo(() => {
+        return ALL_STAGES.filter(stage => {
+            if (stage.id === 'diagramGenerator' && !generateDiagrams) return false;
+            if (stage.id === 'htmlTranslator' && !generateHtmlPreview) return false;
+            return true;
+        });
+    }, [generateDiagrams, generateHtmlPreview]);
+
     const isPipelineRunning = loadingStage !== null;
     const hasPipelineStarted = Object.values(outputs).some(val => val) || isPipelineRunning || !!error;
     const isPipelineFinished = !loadingStage && hasPipelineStarted && !error;
@@ -64,14 +73,15 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
         } else if (loadingStage) {
             setActiveTab(loadingStage);
         } else if (isPipelineFinished) {
+            const visibleStageIds = visibleStages.map(s => s.id);
             const lastCompletedStage = [...PIPELINE_STAGES].reverse().find(stage => 
-                stageStatus[stage] === 'completed'
+                stageStatus[stage] === 'completed' && visibleStageIds.includes(stage)
             );
             if (lastCompletedStage) {
                 setActiveTab(lastCompletedStage);
             }
         }
-    }, [loadingStage, isPipelineFinished, error, stageStatus]);
+    }, [loadingStage, isPipelineFinished, error, stageStatus, visibleStages]);
 
     const activeStagesCount = useMemo(() => {
         // Base stages that always run
@@ -129,7 +139,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
             )}
             
             <div className="flex flex-wrap items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-4 gap-1">
-                {STAGES.map(({ id, title, icon }) => {
+                {visibleStages.map(({ id, title, icon }) => {
                     const status = stageStatus[id];
                     const IconComponent = 
                         status === 'failed' ? <ErrorIcon className="w-5 h-5 text-destructive" /> :
@@ -153,12 +163,12 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
 
             <div className="flex-grow bg-background/50 rounded-md p-4 min-h-[30rem] relative border border-input overflow-hidden">
                 <div className={`absolute inset-0 transition-opacity duration-300 ease-in-out flex flex-col items-center justify-center h-full text-center text-muted-foreground ${!hasPipelineStarted ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                    <div className="w-16 h-16 mb-4 opacity-50">{STAGES[0].icon}</div>
+                    <div className="w-16 h-16 mb-4 opacity-50">{ALL_STAGES[0].icon}</div>
                     <h3 className="text-lg font-semibold">Your generated note will appear here.</h3>
                     <p>Fill in the input fields and click "Generate" to start the process.</p>
                 </div>
                  
-                {STAGES.map(({ id, title }) => (
+                {ALL_STAGES.map(({ id, title }) => (
                      <div key={id} className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${activeTab === id ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                         <div className="h-full w-full">
                            {id === 'htmlTranslator' ? (
