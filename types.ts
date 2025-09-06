@@ -1,5 +1,5 @@
 
-export type Stage = 'synthesizer' | 'condenser' | 'enhancer' | 'mermaidValidator' | 'finalizer';
+export type Stage = 'synthesizer' | 'condenser' | 'enhancer' | 'mermaidValidator' | 'finalizer' | 'preview';
 
 export interface StageOutputs {
     synthesizer: string;
@@ -7,14 +7,10 @@ export interface StageOutputs {
     enhancer: string;
     mermaidValidator: string;
     finalizer: string;
+    preview: string;
 }
 
-export type ExportFormat = 'markdown' | 'pdf' | 'docx' | 'latex';
-export type Template = 'default' | 'academic' | 'modern';
+// FIX: Add ExportFormat and Template types for the export modal component.
+export type ExportFormat = 'pdf' | 'docx' | 'markdown' | 'latex';
 
-export interface TemplateStyle {
-    font: 'helvetica' | 'times' | 'courier';
-    fontFamily: string;
-    fontSize: number;
-    lineHeight: number;
-}
+export type Template = 'default';

@@ -1,4 +1,5 @@
-import { Template, TemplateStyle } from "./types";
+
+import type { Template } from './types';
 
 export const STAGE_PROMPTS = {
     synthesizer: `
@@ -84,17 +85,14 @@ export const STAGE_PROMPTS = {
     `
 };
 
-export const TEMPLATES: Record<Template, { name: string; style: TemplateStyle }> = {
-  default: { 
-    name: 'Default', 
-    style: { font: 'helvetica', fontFamily: "'Inter', sans-serif", fontSize: 12, lineHeight: 1.5 } 
-  },
-  academic: { 
-    name: 'Academic', 
-    style: { font: 'times', fontFamily: "'Times New Roman', serif", fontSize: 12, lineHeight: 2 } 
-  },
-  modern: { 
-    name: 'Modern', 
-    style: { font: 'helvetica', fontFamily: "'Inter', sans-serif", fontSize: 11, lineHeight: 1.8 } 
-  },
+// FIX: Add TEMPLATES constant for export styling and provide strong typing to prevent downstream errors.
+export const TEMPLATES: Record<Template, { name: string; style: { fontFamily: string; fontSize: number; lineHeight: number; } }> = {
+    default: {
+        name: 'Default',
+        style: {
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 16,
+            lineHeight: 1.6,
+        },
+    },
 };

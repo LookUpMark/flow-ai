@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { runKnowledgePipeline, generateTitle } from './services/geminiService';
 import type { Stage, StageOutputs } from './types';
 import { InputPanel } from './components/InputPanel';
 import { OutputPanel } from './components/OutputPanel';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { marked } from 'marked';
 
 const App: React.FC = () => {
     const [topic, setTopic] = useState<string>('');
@@ -17,6 +18,7 @@ const App: React.FC = () => {
         enhancer: '',
         mermaidValidator: '',
         finalizer: '',
+        preview: '',
     });
 
     const [loadingStage, setLoadingStage] = useState<Stage | null>(null);
@@ -25,7 +27,7 @@ const App: React.FC = () => {
 
     const handleGenerate = useCallback(async () => {
         setError(null);
-        setOutputs({ synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', finalizer: '' });
+        setOutputs({ synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', finalizer: '', preview: '' });
 
         const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
         if (!topic.trim() || !combinedInput.trim()) {
@@ -61,6 +63,15 @@ const App: React.FC = () => {
         }
     }, [topic, rawText, fileContent]);
     
+     useEffect(() => {
+        if (outputs.finalizer && !loadingStage) {
+            const finalMarkdown = outputs.finalizer;
+            const cleanMarkdown = finalMarkdown.replace(/---[\s\S]*?---/, '').trim();
+            const html = marked.parse(cleanMarkdown);
+            setOutputs(prev => ({ ...prev, preview: html as string }));
+        }
+    }, [outputs.finalizer, loadingStage]);
+
     const handleGenerateTitle = useCallback(async () => {
         setError(null);
         const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
