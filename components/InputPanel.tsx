@@ -111,11 +111,11 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                  <input
                     id="file"
                     type="file"
-                    accept=".txt,.md,.js,.ts,.tsx,.py,.html,.css"
+                    accept=".txt,.md,.js,.ts,.tsx,.py,.html,.css,.pdf,.docx,.pptx"
                     onChange={onFileChange}
                     className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm text-muted-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                 />
-                <p className="text-xs text-muted-foreground">.txt, .md and other plain text files work best.</p>
+                <p className="text-xs text-muted-foreground">Plain text, .pdf, .docx, and .pptx files work best.</p>
             </div>
 
             <div className="space-y-4">

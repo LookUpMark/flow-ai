@@ -8,6 +8,10 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { SettingsModal } from './components/SettingsModal';
 
+declare const pdfjsLib: any;
+declare const mammoth: any;
+declare const JSZip: any;
+
 const getFriendlyErrorMessage = (err: unknown): AppError => {
     const friendlyError: AppError = {
         context: 'setup',
@@ -126,16 +130,79 @@ const App: React.FC = () => {
         }
     }, [rawText, fileContent, modelConfig, settings]);
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => setFileContent(e.target?.result as string);
-            reader.onerror = () => {
-                setError({ context: 'setup', message: "Failed to read the file." });
+            setFileContent(`Parsing ${file.name}...`);
+            setError(null);
+            try {
+                const extension = file.name.split('.').pop()?.toLowerCase() || 'file';
+                const reader = new FileReader();
+
+                const content = await new Promise<string>((resolve, reject) => {
+                    reader.onload = async (e) => {
+                        try {
+                            const buffer = e.target?.result;
+                            if (!buffer) return reject(new Error('File buffer is empty.'));
+
+                            if (extension === 'pdf') {
+                                const typedarray = new Uint8Array(buffer as ArrayBuffer);
+                                const loadingTask = pdfjsLib.getDocument(typedarray);
+                                const pdf = await loadingTask.promise;
+                                let text = '';
+                                for (let i = 1; i <= pdf.numPages; i++) {
+                                    const page = await pdf.getPage(i);
+                                    const textContent = await page.getTextContent();
+                                    text += textContent.items.map((item: any) => item.str).join(' ');
+                                    text += '\n\n'; // Add space between pages
+                                }
+                                resolve(text);
+                            } else if (extension === 'docx') {
+                                const result = await mammoth.extractRawText({ arrayBuffer: buffer as ArrayBuffer });
+                                resolve(result.value);
+                            } else if (extension === 'pptx') {
+                                const zip = await JSZip.loadAsync(buffer as ArrayBuffer);
+                                const slideFiles = Object.keys(zip.files).filter(name => name.startsWith('ppt/slides/slide') && name.endsWith('.xml'));
+                                slideFiles.sort((a, b) => {
+                                    const numA = parseInt(a.match(/(\d+)\.xml$/)?.[1] || '0');
+                                    const numB = parseInt(b.match(/(\d+)\.xml$/)?.[1] || '0');
+                                    return numA - numB;
+                                });
+
+                                let text = '';
+                                for (const slideFile of slideFiles) {
+                                    const slideXml = await zip.file(slideFile).async('string');
+                                    const textNodes = slideXml.match(/<a:t>.*?<\/a:t>/g) || [];
+                                    const slideText = textNodes.map(node => node.replace(/<\/?a:t>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')).join(' ');
+                                    if (slideText.trim()) {
+                                        text += `--- Slide ${slideFiles.indexOf(slideFile) + 1} ---\n${slideText}\n\n`;
+                                    }
+                                }
+                                resolve(text);
+                            } else {
+                                resolve(buffer as string); // Fallback for text files
+                            }
+                        } catch (err) {
+                            console.error(`Error parsing ${extension} file:`, err);
+                            reject(new Error(`Failed to parse ${extension} file. It may be corrupt or in an unsupported format.`));
+                        }
+                    };
+
+                    reader.onerror = () => reject(new Error('Failed to read the file.'));
+                    
+                    if (['pdf', 'docx', 'pptx'].includes(extension)) {
+                        reader.readAsArrayBuffer(file);
+                    } else {
+                        reader.readAsText(file);
+                    }
+                });
+
+                setFileContent(content);
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : "An unknown error occurred during file parsing.";
+                setError({ context: 'setup', message });
                 setFileContent('');
             }
-            reader.readAsText(file);
         }
     };
 
