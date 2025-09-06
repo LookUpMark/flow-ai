@@ -7,7 +7,7 @@ const DEFAULTS: AppSettings = {
         gemini: {},
         openrouter: {
             apiKey: '',
-            model: 'mistralai/mistral-7b-instruct',
+            model: 'deepseek/deepseek-chat-v3.1:free',
         },
         ollama: {
             baseUrl: 'http://localhost:11434',
