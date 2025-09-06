@@ -7,11 +7,13 @@ const DEFAULTS: AppSettings = {
         gemini: {},
         openrouter: {
             apiKey: '',
-            model: 'deepseek/deepseek-chat-v3.1:free',
+            models: ['deepseek/deepseek-chat-v3.1:free', 'mistralai/mistral-7b-instruct'],
+            selectedModel: 'deepseek/deepseek-chat-v3.1:free',
         },
         ollama: {
             baseUrl: 'http://localhost:11434',
-            model: 'llama3',
+            models: ['llama3', 'gemma:2b'],
+            selectedModel: 'llama3',
         },
     },
     reasoningModeEnabled: true,
@@ -24,7 +26,22 @@ export const useSettings = (): [AppSettings, (settings: AppSettings) => void] =>
         try {
             const storedSettings = localStorage.getItem(SETTINGS_KEY);
             if (storedSettings) {
-                const parsed = JSON.parse(storedSettings);
+                const parsed = JSON.parse(storedSettings) as any; // Use any to handle old structure
+
+                // Backwards compatibility migration for model settings
+                if (parsed.config?.openrouter?.model && !parsed.config.openrouter.models) {
+                    const model = parsed.config.openrouter.model;
+                    parsed.config.openrouter.models = [model];
+                    parsed.config.openrouter.selectedModel = model;
+                    delete parsed.config.openrouter.model;
+                }
+                if (parsed.config?.ollama?.model && !parsed.config.ollama.models) {
+                    const model = parsed.config.ollama.model;
+                    parsed.config.ollama.models = [model];
+                    parsed.config.ollama.selectedModel = model;
+                    delete parsed.config.ollama.model;
+                }
+
                 // Merge with defaults to ensure new settings are included after an app update
                 return {
                     ...DEFAULTS,

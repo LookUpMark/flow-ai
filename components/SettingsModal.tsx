@@ -25,6 +25,107 @@ const InputField: React.FC<{ id: string; label: string; value: string; onChange:
     </div>
 );
 
+const ModelManager: React.FC<{
+    provider: 'openrouter' | 'ollama';
+    localSettings: AppSettings;
+    setLocalSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
+}> = ({ provider, localSettings, setLocalSettings }) => {
+    const [newModel, setNewModel] = useState('');
+
+    const handleAddModel = () => {
+        const trimmedModel = newModel.trim();
+        if (!trimmedModel) return;
+
+        setLocalSettings(prev => {
+            const currentConfig = prev.config[provider];
+            const currentModels = currentConfig.models || [];
+            if (currentModels.includes(trimmedModel)) {
+                return prev;
+            }
+            const updatedModels = [...currentModels, trimmedModel];
+            return {
+                ...prev,
+                config: {
+                    ...prev.config,
+                    [provider]: {
+                        ...currentConfig,
+                        models: updatedModels,
+                        selectedModel: currentConfig.selectedModel || trimmedModel,
+                    }
+                }
+            };
+        });
+        setNewModel('');
+    };
+
+    const handleRemoveModel = (modelToRemove: string) => {
+        setLocalSettings(prev => {
+            const currentConfig = prev.config[provider];
+            const currentModels = currentConfig.models || [];
+            const updatedModels = currentModels.filter(m => m !== modelToRemove);
+            const currentSelected = currentConfig.selectedModel;
+            let newSelectedModel = currentSelected;
+            if (currentSelected === modelToRemove) {
+                newSelectedModel = updatedModels.length > 0 ? updatedModels[0] : '';
+            }
+            return {
+                ...prev,
+                config: {
+                    ...prev.config,
+                    [provider]: {
+                        ...currentConfig,
+                        models: updatedModels,
+                        selectedModel: newSelectedModel,
+                    }
+                }
+            };
+        });
+    };
+
+    return (
+        <div className="space-y-3">
+            <label className="text-sm font-medium text-muted-foreground">Models</label>
+            <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                {(localSettings.config[provider].models || []).map(model => (
+                    <div key={model} className="flex items-center justify-between bg-background/50 p-2 rounded-md border border-input">
+                        <span className="text-sm truncate pr-2" title={model}>{model}</span>
+                        <button
+                            onClick={() => handleRemoveModel(model)}
+                            className="p-1 text-muted-foreground hover:text-destructive transition-colors rounded-md flex-shrink-0"
+                            aria-label={`Remove ${model}`}
+                            title={`Remove ${model}`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+                ))}
+                {(localSettings.config[provider].models || []).length === 0 && <p className="text-xs text-muted-foreground px-2">No models added yet.</p>}
+            </div>
+            <div className="flex gap-2 items-end">
+                <div className="flex-grow">
+                    <label htmlFor={`${provider}-new-model`} className="text-xs font-medium text-muted-foreground">Add New Model</label>
+                    <input
+                        id={`${provider}-new-model`}
+                        type="text"
+                        value={newModel}
+                        onChange={e => setNewModel(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddModel(); } }}
+                        placeholder={provider === 'openrouter' ? "e.g., google/gemma-7b-it" : "e.g., llama3:8b"}
+                        className="flex h-9 w-full rounded-md border border-input bg-background/50 px-3 py-1.5 text-sm"
+                    />
+                </div>
+                <button
+                    onClick={handleAddModel}
+                    className="h-9 px-4 inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors flex-shrink-0"
+                >
+                    Add
+                </button>
+            </div>
+        </div>
+    );
+};
+
+
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings, onSave }) => {
     const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
 
@@ -54,7 +155,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
     return ReactDOM.createPortal(
         <>
             <div className="modal-backdrop animate-in fade-in-0" onClick={onClose}></div>
-            <div className="modal-content bg-card border border-border rounded-lg shadow-2xl w-[90vw] max-w-lg flex flex-col animate-in fade-in-0 zoom-in-95">
+            <div className="modal-content bg-card border border-border rounded-lg shadow-2xl w-[90vw] max-w-lg flex flex-col animate-in fade-in-0 zoom-in-95 max-h-[90vh]">
                 <header className="flex items-center justify-between p-4 border-b border-border">
                     <h2 className="text-xl font-semibold">API Provider Settings</h2>
                     <button onClick={onClose} className="p-1 rounded-md hover:bg-accent">
@@ -99,14 +200,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                                 onChange={(e) => updateProviderConfig('openrouter', 'apiKey', e.target.value)}
                                 placeholder="sk-or-..."
                              />
-                             <InputField
-                                id="openrouter-model"
-                                label="Model Name"
-                                value={localSettings.config.openrouter.model}
-                                onChange={(e) => updateProviderConfig('openrouter', 'model', e.target.value)}
-                                placeholder="e.g., mistralai/mistral-7b-instruct"
-                                description="Find model names on the OpenRouter website."
-                             />
+                            <ModelManager provider="openrouter" localSettings={localSettings} setLocalSettings={setLocalSettings} />
                         </div>
                     )}
 
@@ -121,14 +215,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                                 placeholder="http://localhost:11434"
                                 description="The URL of your running Ollama instance."
                             />
-                             <InputField
-                                id="ollama-model"
-                                label="Model Name"
-                                value={localSettings.config.ollama.model}
-                                onChange={(e) => updateProviderConfig('ollama', 'model', e.target.value)}
-                                placeholder="e.g., llama3"
-                                description="The name of the model you have pulled in Ollama."
-                            />
+                            <ModelManager provider="ollama" localSettings={localSettings} setLocalSettings={setLocalSettings} />
                         </div>
                     )}
                 </main>

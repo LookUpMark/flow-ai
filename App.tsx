@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { runKnowledgePipeline, generateTitle, PipelineError, PipelineUpdate } from './services/aiService';
 import type { Stage, StageOutputs, AppError, ModelConfigType } from './types';
@@ -235,6 +236,8 @@ const App: React.FC = () => {
                     setModelConfig={setModelConfig}
                     reasoningModeEnabled={settings.reasoningModeEnabled}
                     setReasoningModeEnabled={(value) => saveSettings({ ...settings, reasoningModeEnabled: value })}
+                    settings={settings}
+                    saveSettings={saveSettings}
                 />
                 <OutputPanel
                     outputs={outputs}

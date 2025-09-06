@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { SparklesIcon, AlertTriangleIcon } from './Icons';
-import type { AppError, ModelConfigType, ApiProvider } from '../types';
+import type { AppError, ModelConfigType, ApiProvider, AppSettings } from '../types';
 
 interface InputPanelProps {
     topic: string;
@@ -24,6 +25,8 @@ interface InputPanelProps {
     setModelConfig: (value: ModelConfigType) => void;
     reasoningModeEnabled: boolean;
     setReasoningModeEnabled: (value: boolean) => void;
+    settings: AppSettings;
+    saveSettings: (settings: AppSettings) => void;
 }
 
 const GenerateIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -37,12 +40,27 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     topic, setTopic, rawText, setRawText, onFileChange, onGenerate, isLoading, error, setError,
     onGenerateTitle, isGeneratingTitle, hasContent, generateDiagrams, setGenerateDiagrams,
     generateHtmlPreview, setGenerateHtmlPreview, provider, modelConfig, setModelConfig,
-    reasoningModeEnabled, setReasoningModeEnabled
+    reasoningModeEnabled, setReasoningModeEnabled, settings, saveSettings
 }) => {
 
     const handleClearError = () => {
         setError(null);
     }
+
+    const handleSelectedModelChange = (newModel: string) => {
+        if (provider === 'openrouter' || provider === 'ollama') {
+            saveSettings({
+                ...settings,
+                config: {
+                    ...settings.config,
+                    [provider]: {
+                        ...settings.config[provider],
+                        selectedModel: newModel,
+                    }
+                }
+            });
+        }
+    };
 
     const canGenerateTitle = hasContent && !isLoading && !isGeneratingTitle;
     const isDiagramGenerationDisabled = provider !== 'gemini';
@@ -135,6 +153,29 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                         <p className="text-sm text-muted-foreground">"Pro" provides better results but is slower. "Flash" is faster for quick iterations.</p>
                     </div>
                  )}
+                {(provider === 'openrouter' || provider === 'ollama') && (
+                    <div className="flex flex-col gap-2 bg-muted/30 p-4 rounded-lg border border-input">
+                        <label htmlFor="model-name-select" className="font-medium text-foreground">Model</label>
+                        <select
+                            id="model-name-select"
+                            value={settings.config[provider].selectedModel}
+                            onChange={(e) => handleSelectedModelChange(e.target.value)}
+                            disabled={isLoading || settings.config[provider].models.length === 0}
+                            className="h-10 w-full rounded-md border border-input bg-background/80 pl-3 pr-10 py-2 text-sm ring-offset-background placeholder:text-muted-foreground transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:border-primary disabled:opacity-50"
+                        >
+                            {settings.config[provider].models.length > 0 ? (
+                                settings.config[provider].models.map(model => (
+                                    <option key={model} value={model}>{model}</option>
+                                ))
+                            ) : (
+                                <option value="">No models configured</option>
+                            )}
+                        </select>
+                        {settings.config[provider].models.length === 0 && (
+                            <p className="text-sm text-muted-foreground">Please add one or more models in the settings panel.</p>
+                        )}
+                    </div>
+                )}
                 <div 
                     className={`flex items-center justify-between bg-muted/30 p-4 rounded-lg border border-input transition-opacity ${isReasoningModeDisabled ? 'opacity-60' : ''}`}
                     title={isReasoningModeDisabled ? "Reasoning mode is not available for the Ollama provider." : "Toggles creative/reasoning capabilities. Disabling it may result in faster, more deterministic responses."}

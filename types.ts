@@ -40,11 +40,13 @@ export interface ProviderSettings {
     gemini: {}; // No specific config needed, API key is from env
     openrouter: {
         apiKey: string;
-        model: string;
+        models: string[];
+        selectedModel: string;
     };
     ollama: {
         baseUrl: string;
-        model: string;
+        models: string[];
+        selectedModel: string;
     };
 }
 

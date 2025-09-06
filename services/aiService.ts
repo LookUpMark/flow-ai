@@ -1,4 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
+// FIX: Import GenerateImagesResponse to correctly type the response from the image generation API.
+import { GoogleGenAI, GenerateImagesResponse } from "@google/genai";
 import { STAGE_PROMPTS } from '../constants';
 import type { Stage, ModelConfigType, AppSettings } from '../types';
 
@@ -89,7 +90,7 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                 return response.text;
             }
             case 'openrouter': {
-                const { apiKey, model } = settings.config.openrouter;
+                const { apiKey, selectedModel: model } = settings.config.openrouter;
                 if (!apiKey || !model) throw new Error("OpenRouter API key and model must be configured in settings.");
                 const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: 'POST',
@@ -101,7 +102,7 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                 return data.choices[0].message.content;
             }
             case 'ollama': {
-                const { baseUrl, model } = settings.config.ollama;
+                const { baseUrl, selectedModel: model } = settings.config.ollama;
                 if (!baseUrl || !model) throw new Error("Ollama Base URL and model must be configured in settings.");
                 const response = await fetch(`${baseUrl}/api/generate`, {
                     method: 'POST',
@@ -140,7 +141,7 @@ async function* generateTextStream(prompt: string, settings: AppSettings, modelC
             break;
         }
         case 'openrouter': {
-            const { apiKey, model } = settings.config.openrouter;
+            const { apiKey, selectedModel: model } = settings.config.openrouter;
             if (!apiKey || !model) throw new Error("OpenRouter API key and model must be configured in settings.");
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: 'POST',
@@ -170,7 +171,7 @@ async function* generateTextStream(prompt: string, settings: AppSettings, modelC
             break;
         }
         case 'ollama': {
-            const { baseUrl, model } = settings.config.ollama;
+            const { baseUrl, selectedModel: model } = settings.config.ollama;
             if (!baseUrl || !model) throw new Error("Ollama Base URL and model must be configured in settings.");
             const response = await fetch(`${baseUrl}/api/generate`, {
                 method: 'POST',
@@ -215,7 +216,8 @@ const generateDiagramImage = async (mermaidCode: string, modelConfig: ModelConfi
     const descriptivePrompt = await createDiagramPrompt(mermaidCode, modelConfig, settings);
     const finalPrompt = `${descriptivePrompt}. Minimalist vector art style. Clean lines, simple shapes, and a light, neutral background. High-contrast, easy-to-read text.`;
     
-    const apiCall = () => ai.models.generateImages({
+    // FIX: Explicitly type the apiCall to ensure withRetry infers the correct return type.
+    const apiCall = (): Promise<GenerateImagesResponse> => ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: finalPrompt,
         config: { numberOfImages: 1, outputMimeType: 'image/jpeg', aspectRatio: '16:9' },
