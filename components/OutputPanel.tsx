@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Stage, StageOutputs } from '../types';
 import { StageDisplay } from './StageDisplay';
 import { BrainIcon, FilterIcon, WandIcon, ValidatorIcon, ObsidianIcon } from './Icons';
@@ -23,6 +23,13 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage 
     const isPipelineRunning = loadingStage !== null;
     const isPipelineFinished = loadingStage === null && !!outputs.finalizer;
 
+    // When the pipeline finishes, switch to the finalizer tab
+    useEffect(() => {
+        if (isPipelineFinished) {
+            setActiveTab('finalizer');
+        }
+    }, [isPipelineFinished]);
+
     const getTabClassName = (stage: Stage) => {
         const base = "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 flex-1 gap-2";
         
@@ -30,7 +37,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage 
         const isDisabled = !outputs[stage] && loadingStage !== stage;
 
         if (isActive) {
-            return `${base} bg-background text-foreground shadow-sm`;
+            return `${base} bg-background text-foreground shadow-[0_2px_8px_hsl(var(--primary)/20%)]`;
         }
         if (isDisabled) {
             return `${base} pointer-events-none opacity-50`;
@@ -39,7 +46,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage 
     };
 
     return (
-        <div className="bg-card text-card-foreground border rounded-lg p-6 flex flex-col shadow-sm">
+        <div className="bg-card text-card-foreground border rounded-lg p-6 flex flex-col shadow-lg shadow-black/20">
             <h2 className="text-2xl font-semibold text-foreground mb-4">2. View Output</h2>
             <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-4">
                 {STAGES.map(({ id, title, icon }) => (
@@ -55,7 +62,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage 
                 ))}
             </div>
 
-            <div className="flex-grow bg-background rounded-md p-4 min-h-[30rem] relative border">
+            <div className="flex-grow bg-background/50 rounded-md p-4 min-h-[30rem] relative border border-input">
                  {!isPipelineRunning && !isPipelineFinished ? (
                     <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                         <div className="w-16 h-16 mb-4 opacity-50">{STAGES.find(s => s.id === 'synthesizer')?.icon}</div>

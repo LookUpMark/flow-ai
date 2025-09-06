@@ -57,13 +57,13 @@ export const StageDisplay: React.FC<StageDisplayProps> = ({ title, content, isLo
             {isFinal && (
                  <button
                     onClick={handleCopy}
-                    className="absolute top-0 right-0 mt-[-1rem] mr-[-0.5rem] h-9 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground z-10"
+                    className="absolute top-0 right-0 mt-[-1rem] mr-[-0.5rem] h-9 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-primary/50 text-primary bg-background hover:bg-primary/10 hover:text-primary z-10"
                     >
                     {copied ? <CheckIcon className="w-4 h-4 text-green-500" /> : <CopyIcon className="w-4 h-4" />}
                     <span className="ml-2">{copied ? 'Copied!' : 'Copy'}</span>
                 </button>
             )}
-            <pre className="w-full h-full overflow-auto whitespace-pre-wrap break-words text-sm text-muted-foreground font-mono bg-transparent rounded-md">
+            <pre className="w-full h-full overflow-auto whitespace-pre-wrap break-words text-sm text-foreground/80 font-mono bg-transparent rounded-md p-1">
                 <code>
                     {content || 'Waiting for previous stage to complete...'}
                 </code>

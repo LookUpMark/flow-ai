@@ -28,7 +28,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     }
     
     return (
-        <div className="bg-card text-card-foreground border rounded-lg p-6 flex flex-col gap-6 h-full shadow-sm">
+        <div className="bg-card text-card-foreground border rounded-lg p-6 flex flex-col gap-6 h-full shadow-lg shadow-black/20">
             <h2 className="text-2xl font-semibold text-foreground">1. Provide Input</h2>
             
             {error && (
@@ -49,7 +49,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="e.g., 'Introduction to React Hooks'"
-                    className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:border-primary"
                 />
             </div>
 
@@ -60,7 +60,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                     value={rawText}
                     onChange={(e) => setRawText(e.target.value)}
                     placeholder="Paste your notes, article content, or any raw text here..."
-                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[16rem] resize-y"
+                    className="flex w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[16rem] resize-y focus-visible:border-primary"
                 />
             </div>
             
@@ -79,7 +79,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             <button
                 onClick={onGenerate}
                 disabled={isLoading}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-4 py-2 w-full"
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-4 py-2 w-full shadow-[0_4px_14px_0_hsl(var(--primary)/25%)] hover:shadow-[0_6px_20px_0_hsl(var(--primary)/30%)] active:scale-[0.98]"
             >
                 {isLoading ? (
                     <>
