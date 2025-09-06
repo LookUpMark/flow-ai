@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const BrainCircuitIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -20,10 +19,10 @@ const BrainCircuitIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 export const Header: React.FC = () => {
     return (
-        <header className="bg-brand-surface/50 backdrop-blur-sm border-b border-brand-muted/50 sticky top-0 z-10">
+        <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
             <div className="container mx-auto px-4 md:px-6 lg:px-8 py-4 flex items-center justify-center">
-                <BrainCircuitIcon className="w-8 h-8 mr-3 text-brand-accent" />
-                <h1 className="text-2xl md:text-3xl font-bold text-brand-text tracking-tight">
+                <BrainCircuitIcon className="w-8 h-8 mr-3 text-primary" />
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
                     Obsidian Knowledge Architect
                 </h1>
             </div>

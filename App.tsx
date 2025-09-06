@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { runKnowledgePipeline } from './services/geminiService';
 import type { Stage, StageOutputs } from './types';

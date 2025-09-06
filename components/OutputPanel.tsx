@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { Stage, StageOutputs } from '../types';
 import { StageDisplay } from './StageDisplay';
@@ -25,23 +24,24 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage 
     const isPipelineFinished = loadingStage === null && !!outputs.finalizer;
 
     const getTabClassName = (stage: Stage) => {
-        const base = "flex-1 text-center px-4 py-3 font-medium rounded-t-lg transition-all duration-300 flex items-center justify-center gap-2";
+        const base = "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 flex-1 gap-2";
+        
         const isActive = activeTab === stage;
         const isDisabled = !outputs[stage] && loadingStage !== stage;
 
         if (isActive) {
-            return `${base} bg-brand-surface text-brand-accent border-b-2 border-brand-accent`;
+            return `${base} bg-background text-foreground shadow-sm`;
         }
         if (isDisabled) {
-            return `${base} text-brand-muted cursor-not-allowed`;
+            return `${base} pointer-events-none opacity-50`;
         }
-        return `${base} text-brand-text-muted hover:bg-brand-muted/20 hover:text-brand-text`;
+        return `${base} hover:bg-accent/50 hover:text-accent-foreground`;
     };
 
     return (
-        <div className="bg-brand-surface rounded-lg p-6 flex flex-col shadow-lg border border-brand-muted/30">
-            <h2 className="text-2xl font-semibold text-brand-text-muted mb-4">2. View Output</h2>
-            <div className="flex border-b border-brand-muted/50 mb-4">
+        <div className="bg-card text-card-foreground border rounded-lg p-6 flex flex-col shadow-sm">
+            <h2 className="text-2xl font-semibold text-foreground mb-4">2. View Output</h2>
+            <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-4">
                 {STAGES.map(({ id, title, icon }) => (
                      <button
                         key={id}
@@ -55,16 +55,16 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage 
                 ))}
             </div>
 
-            <div className="flex-grow bg-brand-bg rounded-md p-4 min-h-[30rem] relative">
+            <div className="flex-grow bg-background rounded-md p-4 min-h-[30rem] relative border">
                  {!isPipelineRunning && !isPipelineFinished ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-brand-muted">
-                        <div className="w-16 h-16 mb-4">{STAGES.find(s => s.id === 'synthesizer')?.icon}</div>
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                        <div className="w-16 h-16 mb-4 opacity-50">{STAGES.find(s => s.id === 'synthesizer')?.icon}</div>
                         <h3 className="text-lg font-semibold">Your generated note will appear here.</h3>
                         <p>Fill in the input fields and click "Generate" to start the process.</p>
                     </div>
                  ) : (
                     STAGES.map(({ id, title }) => (
-                         <div key={id} className={activeTab === id ? 'block' : 'hidden'}>
+                         <div key={id} className={activeTab === id ? 'block h-full' : 'hidden'}>
                             <StageDisplay
                                 title={`${title} Stage Output`}
                                 content={outputs[id]}
