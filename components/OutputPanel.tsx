@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Stage, StageOutputs } from '../types';
+import type { Stage, StageOutputs, AppError, StageStatus } from '../types';
 import { StageDisplay } from './StageDisplay';
 import { PreviewDisplay } from './PreviewDisplay';
-import { BrainIcon, FilterIcon, WandIcon, ValidatorIcon, ObsidianIcon, EyeIcon, CheckCircleIcon } from './Icons';
-
+import { BrainIcon, FilterIcon, WandIcon, ValidatorIcon, ObsidianIcon, EyeIcon, CheckCircleIcon, DiagramIcon, ErrorIcon, SkipIcon } from './Icons';
 
 interface OutputPanelProps {
     outputs: StageOutputs;
     loadingStage: Stage | null;
     topic: string;
+    error: AppError | null;
+    generateDiagrams: boolean;
+    generateHtmlPreview: boolean;
 }
 
 const STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
@@ -17,54 +19,80 @@ const STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
     { id: 'enhancer', title: 'Enhance', icon: <WandIcon /> },
     { id: 'mermaidValidator', title: 'Validate', icon: <ValidatorIcon /> },
     { id: 'finalizer', title: 'Finalize', icon: <ObsidianIcon /> },
+    { id: 'diagramGenerator', title: 'Diagrams', icon: <DiagramIcon /> },
     { id: 'htmlTranslator', title: 'Preview', icon: <EyeIcon /> },
 ];
 
-const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator'];
+const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'diagramGenerator', 'htmlTranslator'];
 
-export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic }) => {
+export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic, error, generateDiagrams, generateHtmlPreview }) => {
     const [activeTab, setActiveTab] = useState<Stage>('synthesizer');
     
     const isPipelineRunning = loadingStage !== null;
-    const isPipelineFinished = loadingStage === null && !!outputs.htmlTranslator;
-    const hasPipelineStarted = isPipelineRunning || isPipelineFinished;
-
-    // Effect to automatically switch tabs based on pipeline progress
-    useEffect(() => {
-        if (loadingStage) {
-            setActiveTab(loadingStage);
-        } else if (isPipelineFinished && outputs.htmlTranslator) {
-            setActiveTab('htmlTranslator');
-        }
-    }, [loadingStage, isPipelineFinished, outputs.htmlTranslator]);
-
+    const hasPipelineStarted = Object.values(outputs).some(val => val) || isPipelineRunning || !!error;
+    const isPipelineFinished = !loadingStage && hasPipelineStarted && !error;
 
     const stageStatus = useMemo(() => {
-        const status: Record<Stage, 'completed' | 'running' | 'pending'> = {} as any;
-        STAGES.forEach(({ id }) => {
-            if (loadingStage === id) {
+        const status: Record<Stage, StageStatus> = {} as any;
+        PIPELINE_STAGES.forEach((id) => {
+            const outputExists = !!outputs[id];
+            const isSkipped = outputs[id] === 'Skipped';
+
+            if (error && error.context === id) {
+                status[id] = 'failed';
+            } else if (loadingStage === id) {
                 status[id] = 'running';
-            } else if (outputs[id]) {
+            } else if (isSkipped) {
+                status[id] = 'skipped';
+            } else if (outputExists) {
                 status[id] = 'completed';
             } else {
                 status[id] = 'pending';
             }
         });
         return status;
-    }, [outputs, loadingStage]);
+    }, [outputs, loadingStage, error]);
 
-    const completedPipelineStagesCount = PIPELINE_STAGES.filter(id => !!outputs[id]).length;
-    const progress = (completedPipelineStagesCount / PIPELINE_STAGES.length) * 100;
+    // Effect to automatically switch tabs based on pipeline progress or failure
+    useEffect(() => {
+        if (error) {
+            if (PIPELINE_STAGES.includes(error.context as Stage)) {
+                setActiveTab(error.context as Stage);
+            }
+        } else if (loadingStage) {
+            setActiveTab(loadingStage);
+        } else if (isPipelineFinished) {
+            const lastCompletedStage = [...PIPELINE_STAGES].reverse().find(stage => 
+                stageStatus[stage] === 'completed'
+            );
+            if (lastCompletedStage) {
+                setActiveTab(lastCompletedStage);
+            }
+        }
+    }, [loadingStage, isPipelineFinished, error, stageStatus]);
+
+    const activeStagesCount = useMemo(() => {
+        // Base stages that always run
+        let count = 5; // synthesizer, condenser, enhancer, mermaidValidator, finalizer
+        if (generateDiagrams) count++;
+        if (generateHtmlPreview) count++;
+        return count;
+    }, [generateDiagrams, generateHtmlPreview]);
+
+    const completedPipelineStagesCount = PIPELINE_STAGES.filter(id => stageStatus[id] === 'completed').length;
+    const progress = activeStagesCount > 0 ? (completedPipelineStagesCount / activeStagesCount) * 100 : 0;
 
     const getTabClassName = (stage: Stage) => {
         const base = "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 gap-2";
-        
         const status = stageStatus[stage];
 
+        if (status === 'failed') {
+            return `${base} bg-destructive/10 text-destructive shadow-sm`;
+        }
         if (activeTab === stage) {
             return `${base} bg-background text-foreground shadow-[0_2px_8px_hsl(var(--primary)/20%)]`;
         }
-        if (status === 'completed') {
+        if (status === 'completed' || status === 'skipped') {
             return `${base} text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground`;
         }
         if (status === 'pending') {
@@ -80,11 +108,13 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
             {hasPipelineStarted && (
                  <div className="mb-4">
                     <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium text-primary/90">Pipeline Progress</span>
+                        <span className="text-sm font-medium text-primary/90">
+                            {error ? 'Pipeline Failed' : loadingStage ? `Running: ${loadingStage}` : 'Pipeline Complete'}
+                        </span>
                         <span className="text-sm font-medium text-muted-foreground">{Math.round(progress)}% Complete</span>
                     </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                        <div className="bg-primary h-2 rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }}></div>
+                    <div className={`w-full bg-muted rounded-full h-2 ${error ? 'bg-destructive/20' : ''}`}>
+                        <div className={`${error ? 'bg-destructive' : 'bg-primary'} h-2 rounded-full transition-all duration-500 ease-out`} style={{ width: `${progress}%` }}></div>
                     </div>
                 </div>
             )}
@@ -92,9 +122,11 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
             <div className="flex flex-wrap items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-4 gap-1">
                 {STAGES.map(({ id, title, icon }) => {
                     const status = stageStatus[id];
-                    const isCompleted = status === 'completed';
-                    // Use a green checkmark for completed stages, otherwise the default icon
-                    const IconComponent = isCompleted ? <CheckCircleIcon className="w-5 h-5 text-green-500" /> : icon;
+                    const IconComponent = 
+                        status === 'failed' ? <ErrorIcon className="w-5 h-5 text-destructive" /> :
+                        status === 'skipped' ? <SkipIcon className="w-5 h-5 text-muted-foreground" /> :
+                        status === 'completed' ? <CheckCircleIcon className="w-5 h-5 text-green-500" /> :
+                        icon;
 
                     return (
                         <button
@@ -132,6 +164,8 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
                                     isLoading={loadingStage === id}
                                     isFinalizer={id === 'finalizer'}
                                     hasPipelineStarted={hasPipelineStarted}
+                                    isFailed={error?.context === id}
+                                    errorMessage={error?.context === id ? error.message : undefined}
                                 />
                             )}
                         </div>

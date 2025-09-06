@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CopyIcon, CheckIcon } from './Icons';
+import { CopyIcon, CheckIcon, ErrorIcon, SkipIcon } from './Icons';
 
 interface StageDisplayProps {
     title: string;
@@ -7,10 +7,13 @@ interface StageDisplayProps {
     isLoading: boolean;
     isFinalizer?: boolean;
     hasPipelineStarted: boolean;
+    isFailed?: boolean;
+    errorMessage?: string;
 }
 
-export const StageDisplay: React.FC<StageDisplayProps> = ({ title, content, isLoading, isFinalizer, hasPipelineStarted }) => {
+export const StageDisplay: React.FC<StageDisplayProps> = ({ title, content, isLoading, isFinalizer, hasPipelineStarted, isFailed, errorMessage }) => {
     const [copied, setCopied] = useState(false);
+    const isSkipped = content === 'Skipped';
 
     const handleCopy = () => {
         if (content) {
@@ -26,6 +29,25 @@ export const StageDisplay: React.FC<StageDisplayProps> = ({ title, content, isLo
         }
     }, [copied]);
 
+    if (isFailed) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-center text-destructive p-4">
+                <ErrorIcon className="w-12 h-12 mb-4" />
+                <h3 className="text-lg font-semibold">Stage Failed: {title}</h3>
+                <p className="text-sm max-w-md">{errorMessage || "An unexpected error occurred at this stage."}</p>
+            </div>
+        );
+    }
+    
+    if (isSkipped) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
+                <SkipIcon className="w-12 h-12 mb-4" />
+                <h3 className="text-lg font-semibold">Stage Skipped</h3>
+                <p className="text-sm max-w-md">This stage was intentionally skipped based on your configuration.</p>
+            </div>
+        );
+    }
 
     if (isLoading && !content) {
         return (

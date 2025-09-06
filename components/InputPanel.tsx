@@ -1,5 +1,6 @@
 import React from 'react';
-import { SparklesIcon } from './Icons';
+import { SparklesIcon, AlertTriangleIcon } from './Icons';
+import type { AppError, ModelConfigType, ApiProvider } from '../types';
 
 interface InputPanelProps {
     topic: string;
@@ -9,15 +10,22 @@ interface InputPanelProps {
     onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onGenerate: () => void;
     isLoading: boolean;
-    error: string | null;
-    setError: (error: string | null) => void;
+    error: AppError | null;
+    setError: (error: AppError | null) => void;
     onGenerateTitle: () => void;
     isGeneratingTitle: boolean;
     hasContent: boolean;
+    generateDiagrams: boolean;
+    setGenerateDiagrams: (value: boolean) => void;
+    generateHtmlPreview: boolean;
+    setGenerateHtmlPreview: (value: boolean) => void;
+    provider: ApiProvider;
+    modelConfig: ModelConfigType;
+    setModelConfig: (value: ModelConfigType) => void;
 }
 
 const GenerateIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className={className}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
         <path d="m13 13-1-4-4 1 1 4 4-1z" />
     </svg>
@@ -25,7 +33,8 @@ const GenerateIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 export const InputPanel: React.FC<InputPanelProps> = ({
     topic, setTopic, rawText, setRawText, onFileChange, onGenerate, isLoading, error, setError,
-    onGenerateTitle, isGeneratingTitle, hasContent
+    onGenerateTitle, isGeneratingTitle, hasContent, generateDiagrams, setGenerateDiagrams,
+    generateHtmlPreview, setGenerateHtmlPreview, provider, modelConfig, setModelConfig
 }) => {
 
     const handleClearError = () => {
@@ -33,17 +42,21 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     }
 
     const canGenerateTitle = hasContent && !isLoading && !isGeneratingTitle;
+    const isDiagramGenerationDisabled = provider !== 'gemini';
     
     return (
         <div className="bg-card text-card-foreground border rounded-lg p-6 flex flex-col gap-6 h-full shadow-lg shadow-black/20">
             <h2 className="text-2xl font-semibold text-foreground">1. Provide Input</h2>
             
             {error && (
-                <div className="bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-md relative flex items-center gap-2" role="alert">
-                    <div className="font-bold">Error:</div>
-                    <span className="text-sm">{error}</span>
-                    <button onClick={handleClearError} className="absolute top-0.5 right-0.5 p-2 text-destructive/80 hover:text-destructive">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <div className="bg-destructive/10 border border-destructive/50 text-destructive-foreground px-4 py-3 rounded-md relative flex items-start gap-3" role="alert">
+                    <AlertTriangleIcon className="w-5 h-5 mt-0.5 text-destructive flex-shrink-0"/>
+                    <div className="flex-grow">
+                        <div className="font-bold">An Error Occurred</div>
+                        <p className="text-sm opacity-90">{error.message}</p>
+                    </div>
+                    <button onClick={handleClearError} className="absolute top-1 right-1 p-2 text-destructive/80 hover:text-destructive">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
                 </div>
             )}
@@ -68,7 +81,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                     >
                         {isGeneratingTitle ? (
                              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         ) : (
@@ -101,6 +114,68 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                 <p className="text-xs text-muted-foreground">.txt, .md and other plain text files work best.</p>
             </div>
 
+            <div className="space-y-4">
+                 {provider === 'gemini' && (
+                    <div className="flex flex-col gap-2 bg-muted/30 p-4 rounded-lg border border-input">
+                        <label htmlFor="model-select" className="font-medium text-foreground">Model Selection</label>
+                        <select
+                            id="model-select"
+                            value={modelConfig}
+                            onChange={(e) => setModelConfig(e.target.value as ModelConfigType)}
+                            disabled={isLoading}
+                            className="h-10 w-full rounded-md border border-input bg-background/80 pl-3 pr-10 py-2 text-sm ring-offset-background placeholder:text-muted-foreground transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:border-primary disabled:opacity-50"
+                        >
+                            <option value="pro">Gemini 2.5 Pro (Higher Quality)</option>
+                            <option value="flash">Gemini 2.5 Flash (Faster)</option>
+                        </select>
+                        <p className="text-sm text-muted-foreground">"Pro" provides better results but is slower. "Flash" is faster for quick iterations.</p>
+                    </div>
+                 )}
+                <div 
+                    className={`flex items-center justify-between bg-muted/30 p-4 rounded-lg border border-input transition-opacity ${isDiagramGenerationDisabled ? 'opacity-60' : ''}`}
+                    title={isDiagramGenerationDisabled ? "Diagram generation is only available with the Gemini provider." : ""}
+                >
+                    <label htmlFor="generate-diagrams-toggle" className={`flex flex-col flex-grow pr-4 ${isDiagramGenerationDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                        <span className="font-medium text-foreground">Generate Diagram Images</span>
+                        <span className="text-sm text-muted-foreground">Slower, portable images. Only available for Gemini provider.</span>
+                    </label>
+                    <button
+                        type="button"
+                        id="generate-diagrams-toggle"
+                        onClick={() => !isDiagramGenerationDisabled && setGenerateDiagrams(!generateDiagrams)}
+                        className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card disabled:cursor-not-allowed`}
+                        role="switch"
+                        aria-checked={generateDiagrams}
+                        disabled={isLoading || isDiagramGenerationDisabled}
+                    >
+                        <span
+                            aria-hidden="true"
+                            className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                        />
+                    </button>
+                </div>
+                 <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg border border-input">
+                    <label htmlFor="generate-html-toggle" className="flex flex-col cursor-pointer flex-grow pr-4">
+                        <span className="font-medium text-foreground">Generate HTML Preview</span>
+                        <span className="text-sm text-muted-foreground">Fastest when disabled. Skips the final styled preview stage.</span>
+                    </label>
+                    <button
+                        type="button"
+                        id="generate-html-toggle"
+                        onClick={() => setGenerateHtmlPreview(!generateHtmlPreview)}
+                        className={`${generateHtmlPreview ? 'bg-primary' : 'bg-muted'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card`}
+                        role="switch"
+                        aria-checked={generateHtmlPreview}
+                        disabled={isLoading}
+                    >
+                        <span
+                            aria-hidden="true"
+                            className={`${generateHtmlPreview ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                        />
+                    </button>
+                </div>
+            </div>
+
             <button
                 onClick={onGenerate}
                 disabled={isLoading}
@@ -109,7 +184,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                 {isLoading ? (
                     <>
                         <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         Processing...
