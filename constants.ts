@@ -1,3 +1,4 @@
+import { Template, TemplateStyle } from "./types";
 
 export const STAGE_PROMPTS = {
     synthesizer: `
@@ -76,4 +77,19 @@ export const STAGE_PROMPTS = {
                 - Lists of pros/cons or features must always use bullet points.
         **Output:** The final, flawless Markdown file, perfectly formatted for Obsidian, standardized, and ready to be archived in the vault.
     `
+};
+
+export const TEMPLATES: Record<Template, { name: string; style: TemplateStyle }> = {
+  default: { 
+    name: 'Default', 
+    style: { font: 'helvetica', fontSize: 12, lineHeight: 1.5 } 
+  },
+  academic: { 
+    name: 'Academic', 
+    style: { font: 'times', fontSize: 12, lineHeight: 2 } 
+  },
+  modern: { 
+    name: 'Modern', 
+    style: { font: 'helvetica', fontSize: 11, lineHeight: 1.8 } 
+  },
 };

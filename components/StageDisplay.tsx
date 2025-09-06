@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { ExportControls } from './ExportControls';
 
 interface StageDisplayProps {
     title: string;
     content: string;
     isLoading: boolean;
     isFinal?: boolean;
+    topic?: string;
 }
 
 const CopyIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -21,7 +23,7 @@ const CheckIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 
-export const StageDisplay: React.FC<StageDisplayProps> = ({ title, content, isLoading, isFinal }) => {
+export const StageDisplay: React.FC<StageDisplayProps> = ({ title, content, isLoading, isFinal, topic }) => {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
@@ -54,14 +56,17 @@ export const StageDisplay: React.FC<StageDisplayProps> = ({ title, content, isLo
     
     return (
         <div className="relative h-full">
-            {isFinal && (
-                 <button
-                    onClick={handleCopy}
-                    className="absolute top-0 right-0 mt-[-1rem] mr-[-0.5rem] h-9 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-primary/50 text-primary bg-background hover:bg-primary/10 hover:text-primary z-10"
-                    >
-                    {copied ? <CheckIcon className="w-4 h-4 text-green-500" /> : <CopyIcon className="w-4 h-4" />}
-                    <span className="ml-2">{copied ? 'Copied!' : 'Copy'}</span>
-                </button>
+            {isFinal && content && (
+                 <div className="absolute top-0 right-0 mt-[-1rem] mr-[-0.5rem] z-10 flex items-center gap-2">
+                    <ExportControls content={content} topic={topic || 'Untitled Note'} />
+                    <button
+                        onClick={handleCopy}
+                        className="h-9 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-primary/50 text-primary bg-background hover:bg-primary/10 hover:text-primary"
+                        >
+                        {copied ? <CheckIcon className="w-4 h-4 text-green-500" /> : <CopyIcon className="w-4 h-4" />}
+                        <span className="ml-2">{copied ? 'Copied!' : 'Copy'}</span>
+                    </button>
+                 </div>
             )}
             <pre className="w-full h-full overflow-auto whitespace-pre-wrap break-words text-sm text-foreground/80 font-mono bg-transparent rounded-md p-1">
                 <code>

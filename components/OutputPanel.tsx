@@ -7,6 +7,7 @@ import { BrainIcon, FilterIcon, WandIcon, ValidatorIcon, ObsidianIcon } from './
 interface OutputPanelProps {
     outputs: StageOutputs;
     loadingStage: Stage | null;
+    topic: string;
 }
 
 const STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
@@ -17,7 +18,7 @@ const STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
     { id: 'finalizer', title: 'Finalize', icon: <ObsidianIcon /> },
 ];
 
-export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage }) => {
+export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic }) => {
     const [activeTab, setActiveTab] = useState<Stage>('synthesizer');
     
     const isPipelineRunning = loadingStage !== null;
@@ -77,6 +78,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage 
                                 content={outputs[id]}
                                 isLoading={loadingStage === id}
                                 isFinal={id === 'finalizer' && isPipelineFinished}
+                                topic={topic}
                             />
                         </div>
                     ))

@@ -86,6 +86,7 @@ const App: React.FC = () => {
                 <OutputPanel
                     outputs={outputs}
                     loadingStage={loadingStage}
+                    topic={topic}
                 />
             </main>
             <Footer />

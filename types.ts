@@ -8,3 +8,12 @@ export interface StageOutputs {
     mermaidValidator: string;
     finalizer: string;
 }
+
+export type ExportFormat = 'markdown' | 'pdf' | 'docx' | 'latex';
+export type Template = 'default' | 'academic' | 'modern';
+
+export interface TemplateStyle {
+    font: 'helvetica' | 'times' | 'courier';
+    fontSize: number;
+    lineHeight: number;
+}
