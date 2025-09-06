@@ -82,14 +82,14 @@ export const STAGE_PROMPTS = {
 export const TEMPLATES: Record<Template, { name: string; style: TemplateStyle }> = {
   default: { 
     name: 'Default', 
-    style: { font: 'helvetica', fontSize: 12, lineHeight: 1.5 } 
+    style: { font: 'helvetica', fontFamily: "'Inter', sans-serif", fontSize: 12, lineHeight: 1.5 } 
   },
   academic: { 
     name: 'Academic', 
-    style: { font: 'times', fontSize: 12, lineHeight: 2 } 
+    style: { font: 'times', fontFamily: "'Times New Roman', serif", fontSize: 12, lineHeight: 2 } 
   },
   modern: { 
     name: 'Modern', 
-    style: { font: 'helvetica', fontSize: 11, lineHeight: 1.8 } 
+    style: { font: 'helvetica', fontFamily: "'Inter', sans-serif", fontSize: 11, lineHeight: 1.8 } 
   },
 };

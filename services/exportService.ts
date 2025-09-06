@@ -1,5 +1,5 @@
 import saveAs from 'file-saver';
-import type { ExportFormat, Template, TemplateStyle } from '../types';
+import type { ExportFormat, Template } from '../types';
 import { TEMPLATES } from '../constants';
 import { marked } from 'marked';
 import { jsPDF } from 'jspdf';
@@ -21,41 +21,72 @@ const exportMarkdown = (content: string, fileName: string) => {
     saveAs(blob, `${fileName}.md`);
 };
 
-const exportPdf = async (content: string, fileName: string, template: Template) => {
+const exportPdf = (content: string, fileName: string, template: Template) => {
     const { style } = TEMPLATES[template];
-    const pdf = new jsPDF({
-        unit: 'pt',
-        format: 'a4',
-    });
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+    const page_width = pdf.internal.pageSize.getWidth();
+    const margin = 50;
+    const max_width = page_width - margin * 2;
+    let y = margin;
+
+    const checkPageBreak = (spaceNeeded: number) => {
+        if (y + spaceNeeded > pdf.internal.pageSize.getHeight() - margin) {
+            pdf.addPage();
+            y = margin;
+        }
+    };
+
+    const mdContent = content.replace(/---[\s\S]*?---/, '').trim();
+    const lines = mdContent.split('\n');
 
     pdf.setFont(style.font, 'normal');
-    pdf.setFontSize(style.fontSize);
 
-    const htmlContent = await marked.parse(content.replace(/---[\s\S]*?---/, '')); // Remove YAML frontmatter
-    
-    // Create a temporary element to render HTML for better PDF conversion
-    const element = document.createElement('div');
-    element.innerHTML = htmlContent;
-    element.style.width = '595pt'; // A4 width in points
-    element.style.padding = '20pt';
-    element.style.boxSizing = 'border-box';
-    element.style.fontFamily = style.font === 'times' ? 'Times-Roman' : 'Helvetica';
-    element.style.fontSize = `${style.fontSize}pt`;
-    element.style.lineHeight = `${style.lineHeight}`;
+    for (const line of lines) {
+        if (line.trim() === '') {
+            const space = style.fontSize * style.lineHeight * 0.5;
+            checkPageBreak(space);
+            y += space;
+            continue;
+        }
 
-    document.body.appendChild(element);
+        let currentSize = style.fontSize;
+        let textToRender = line;
+        
+        pdf.setFont(style.font, 'normal'); // Reset to normal for each line
 
-    await pdf.html(element, {
-        callback: (doc) => {
-            doc.save(`${fileName}.pdf`);
-            document.body.removeChild(element);
-        },
-        x: 0,
-        y: 0,
-        width: 595, // A4 width
-        windowWidth: 595
-    });
+        if (line.startsWith('### ')) {
+            currentSize = style.fontSize * 1.2;
+            textToRender = line.substring(4);
+            pdf.setFont(style.font, 'bold');
+        } else if (line.startsWith('## ')) {
+            currentSize = style.fontSize * 1.4;
+            textToRender = line.substring(3);
+            pdf.setFont(style.font, 'bold');
+        } else if (line.startsWith('# ')) {
+            currentSize = style.fontSize * 1.8;
+            textToRender = line.substring(2);
+            pdf.setFont(style.font, 'bold');
+        } else if (line.trim().startsWith('* ')) {
+            textToRender = `• ${line.trim().substring(2)}`;
+        } else if (line.trim().match(/^\d+\.\s/)) {
+            textToRender = `  ${line.trim()}`;
+        }
+        
+        pdf.setFontSize(currentSize);
+        const splitText = pdf.splitTextToSize(textToRender, max_width);
+        
+        const spaceForText = splitText.length * (currentSize * style.lineHeight * 0.7);
+
+        checkPageBreak(spaceForText);
+        
+        pdf.text(splitText, margin, y, { lineHeightFactor: style.lineHeight * 0.7 });
+
+        y += spaceForText + 4; // Add a small gap between lines
+    }
+
+    pdf.save(`${fileName}.pdf`);
 };
+
 
 const exportDocx = async (content: string, fileName: string, template: Template) => {
     const { style } = TEMPLATES[template];
@@ -157,7 +188,7 @@ export const exportDocument = async (
             exportMarkdown(content, fileName);
             break;
         case 'pdf':
-            await exportPdf(content, fileName, template);
+            exportPdf(content, fileName, template);
             break;
         case 'docx':
             await exportDocx(content, fileName, template);

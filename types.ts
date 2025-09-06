@@ -14,6 +14,7 @@ export type Template = 'default' | 'academic' | 'modern';
 
 export interface TemplateStyle {
     font: 'helvetica' | 'times' | 'courier';
+    fontFamily: string;
     fontSize: number;
     lineHeight: number;
 }
