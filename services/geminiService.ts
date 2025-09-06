@@ -9,7 +9,7 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const runStage = async (promptTemplate: string, previousOutput: string, topic: string): Promise<string> => {
+const runStage = async (promptTemplate: string, previousOutput: string, topic: string, outputIsHtml: boolean = false): Promise<string> => {
     const fullPrompt = `
         CONTEXT TOPIC: "${topic}"
         ---
@@ -26,8 +26,8 @@ const runStage = async (promptTemplate: string, previousOutput: string, topic: s
             model: 'gemini-2.5-flash',
             contents: fullPrompt,
             config: {
-                // A higher temperature can be good for creative/transformative tasks like this
-                temperature: 0.6,
+                // Lower temperature for more precise HTML/CSS generation, higher for creative markdown tasks
+                temperature: outputIsHtml ? 0.2 : 0.6,
             }
         });
         
@@ -37,6 +37,9 @@ const runStage = async (promptTemplate: string, previousOutput: string, topic: s
             throw new Error('Received an empty or invalid response from the API.');
         }
 
+        if (outputIsHtml) {
+            return text.replace(/^```html\s*/, '').replace(/```\s*$/, '').trim();
+        }
         // Clean up potential markdown code block fences from the response
         return text.replace(/^```markdown\s*/, '').replace(/```\s*$/, '').trim();
 
@@ -121,4 +124,10 @@ export const runKnowledgePipeline = async (
     updateCallback('finalizer', ''); // Signal start
     currentContent = await runStage(STAGE_PROMPTS.finalizer, currentContent, topic);
     updateCallback('finalizer', currentContent);
+
+    // Stage 6: HTML Translator
+    updateCallback('htmlTranslator', ''); // Signal start
+    const finalMarkdown = currentContent;
+    currentContent = await runStage(STAGE_PROMPTS.htmlTranslator, finalMarkdown, topic, true);
+    updateCallback('htmlTranslator', currentContent);
 };

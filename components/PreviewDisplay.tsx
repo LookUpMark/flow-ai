@@ -9,13 +9,16 @@ interface PreviewDisplayProps {
 
 export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({ htmlContent, topic }) => {
     const [isExporting, setIsExporting] = useState(false);
-    const previewRef = useRef<HTMLDivElement>(null);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
 
     const handleExport = async () => {
-        if (!previewRef.current) return;
+        const iframe = iframeRef.current;
+        if (!iframe?.contentWindow?.document.body) return;
+
         setIsExporting(true);
         try {
-            await exportPreviewToPdf(previewRef.current, topic);
+            // We pass the body of the iframe's document to the exporter
+            await exportPreviewToPdf(iframe.contentWindow.document.body, topic);
         } catch (error) {
             console.error("PDF Export failed:", error);
         } finally {
@@ -26,7 +29,7 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({ htmlContent, top
     if (!htmlContent) {
         return (
              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                <h3 className="text-lg font-semibold">Preview will appear here once the pipeline is complete.</h3>
+                <h3 className="text-lg font-semibold">Generating styled HTML preview...</h3>
             </div>
         )
     }
@@ -36,7 +39,7 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({ htmlContent, top
             <div className="absolute top-[-0.5rem] right-[-0.5rem] z-10">
                 <button
                     onClick={handleExport}
-                    disabled={isExporting}
+                    disabled={isExporting || !htmlContent}
                     className="h-9 px-4 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                     {isExporting ? (
@@ -56,11 +59,13 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({ htmlContent, top
                 </button>
             </div>
 
-            <div className="flex-grow overflow-y-auto bg-white text-black p-8 rounded-md">
-                 <div
-                    ref={previewRef}
-                    className="preview-content"
-                    dangerouslySetInnerHTML={{ __html: htmlContent }}
+            <div className="flex-grow bg-background border border-input rounded-md overflow-hidden">
+                 <iframe
+                    ref={iframeRef}
+                    srcDoc={htmlContent}
+                    title="WYSIWYG Preview"
+                    className="w-full h-full border-0"
+                    sandbox="allow-same-origin" // For security, disallow scripts etc.
                 />
             </div>
         </div>

@@ -17,26 +17,26 @@ const STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
     { id: 'enhancer', title: 'Enhance', icon: <WandIcon /> },
     { id: 'mermaidValidator', title: 'Validate', icon: <ValidatorIcon /> },
     { id: 'finalizer', title: 'Finalize', icon: <ObsidianIcon /> },
-    { id: 'preview', title: 'Preview', icon: <EyeIcon /> },
+    { id: 'htmlTranslator', title: 'Preview', icon: <EyeIcon /> },
 ];
 
-const PIPELINE_STAGES: Exclude<Stage, 'preview'>[] = ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer'];
+const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator'];
 
 export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic }) => {
     const [activeTab, setActiveTab] = useState<Stage>('synthesizer');
     
     const isPipelineRunning = loadingStage !== null;
-    const isPipelineFinished = loadingStage === null && !!outputs.finalizer;
+    const isPipelineFinished = loadingStage === null && !!outputs.htmlTranslator;
     const hasPipelineStarted = isPipelineRunning || isPipelineFinished;
 
     // Effect to automatically switch tabs based on pipeline progress
     useEffect(() => {
         if (loadingStage) {
             setActiveTab(loadingStage);
-        } else if (isPipelineFinished && outputs.preview) {
-            setActiveTab('preview');
+        } else if (isPipelineFinished && outputs.htmlTranslator) {
+            setActiveTab('htmlTranslator');
         }
-    }, [loadingStage, isPipelineFinished, outputs.preview]);
+    }, [loadingStage, isPipelineFinished, outputs.htmlTranslator]);
 
 
     const stageStatus = useMemo(() => {
@@ -120,15 +120,15 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
                 {STAGES.map(({ id, title }) => (
                      <div key={id} className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${activeTab === id ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                         <div className="h-full w-full">
-                           {id === 'preview' ? (
+                           {id === 'htmlTranslator' ? (
                                 <PreviewDisplay
-                                    htmlContent={outputs.preview}
+                                    htmlContent={outputs.htmlTranslator}
                                     topic={topic}
                                 />
                             ) : (
                                 <StageDisplay
                                     title={`${title} Stage Output`}
-                                    content={outputs[id as Exclude<Stage, 'preview'>]}
+                                    content={outputs[id as Exclude<Stage, 'htmlTranslator'>]}
                                     isLoading={loadingStage === id}
                                     isFinalizer={id === 'finalizer'}
                                     hasPipelineStarted={hasPipelineStarted}
