@@ -43,9 +43,12 @@ const App: React.FC = () => {
             );
             setLoadingStage(null);
         } catch (err) {
-            console.error(err);
-            const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-            setError(`Failed during pipeline execution: ${errorMessage}`);
+            // Log the detailed technical error for developers/debugging.
+            console.error("Pipeline execution failed:", err);
+            
+            // Provide a more user-friendly message.
+            const userFriendlyMessage = "An unexpected error occurred while generating the note. Please try again. For technical details, please check the browser's developer console.";
+            setError(userFriendlyMessage);
             setLoadingStage(null);
         }
     }, [topic, rawText, fileContent]);
