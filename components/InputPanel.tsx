@@ -67,8 +67,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     const isReasoningModeDisabled = provider === 'ollama';
     
     return (
-        <div className="bg-card text-card-foreground border rounded-lg p-6 flex flex-col gap-6 h-full shadow-lg shadow-black/20">
-            <h2 className="text-2xl font-semibold text-foreground">1. Provide Input</h2>
+        <div className="bg-card text-card-foreground border rounded-lg p-3 flex flex-col gap-3 h-full shadow-lg shadow-black/20">
+            <h2 className="text-xl font-semibold text-foreground">1. Provide Input</h2>
             
             {error && (
                 <div className="bg-destructive/10 border border-destructive/50 text-destructive-foreground px-4 py-3 rounded-md relative flex items-start gap-3" role="alert">
@@ -83,7 +83,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                 </div>
             )}
             
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
                 <label htmlFor="topic" className="text-sm font-medium text-muted-foreground">Topic / Main Context</label>
                 <div className="relative flex items-center">
                     <input
@@ -113,18 +113,18 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                 </div>
             </div>
 
-            <div className="flex flex-col gap-2 flex-grow">
+            <div className="flex flex-col gap-1.5 flex-grow">
                 <label htmlFor="rawText" className="text-sm font-medium text-muted-foreground">Raw Text Input</label>
                 <textarea
                     id="rawText"
                     value={rawText}
                     onChange={(e) => setRawText(e.target.value)}
                     placeholder="Paste your notes, article content, or any raw text here..."
-                    className="flex w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[16rem] resize-y focus-visible:border-primary"
+                    className="flex w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[6rem] resize-y focus-visible:border-primary"
                 />
             </div>
             
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
                  <label htmlFor="file" className="text-sm font-medium text-muted-foreground">Or Upload a File</label>
                  <input
                     ref={fileInputRef}
@@ -137,9 +137,9 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                 <p className="text-xs text-muted-foreground">Plain text, .pdf, .docx, and .pptx files work best.</p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2">
                  {provider === 'gemini' && (
-                    <div className="flex flex-col gap-2 bg-muted/30 p-4 rounded-lg border border-input">
+                    <div className="flex flex-col gap-1.5 bg-muted/30 p-2.5 rounded-lg border border-input">
                         <label htmlFor="model-select" className="font-medium text-foreground">Model Selection</label>
                         <select
                             id="model-select"
@@ -155,7 +155,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                     </div>
                  )}
                 {(provider === 'openrouter' || provider === 'ollama') && (
-                    <div className="flex flex-col gap-2 bg-muted/30 p-4 rounded-lg border border-input">
+                    <div className="flex flex-col gap-1.5 bg-muted/30 p-2.5 rounded-lg border border-input">
                         <label htmlFor="model-name-select" className="font-medium text-foreground">Model</label>
                         <select
                             id="model-name-select"
@@ -178,7 +178,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                     </div>
                 )}
                 <div 
-                    className={`flex items-center justify-between bg-muted/30 p-4 rounded-lg border border-input transition-opacity ${isReasoningModeDisabled ? 'opacity-60' : ''}`}
+                    className={`flex items-center justify-between bg-muted/30 p-2.5 rounded-lg border border-input transition-opacity ${isReasoningModeDisabled ? 'opacity-60' : ''}`}
                     title={isReasoningModeDisabled ? "Reasoning mode is not available for the Ollama provider." : "Toggles creative/reasoning capabilities. Disabling it may result in faster, more deterministic responses."}
                 >
                     <label htmlFor="reasoning-mode-toggle" className={`flex flex-col flex-grow pr-4 ${isReasoningModeDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
@@ -189,19 +189,19 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                         type="button"
                         id="reasoning-mode-toggle"
                         onClick={() => !isReasoningModeDisabled && setReasoningModeEnabled(!reasoningModeEnabled)}
-                        className={`${reasoningModeEnabled && !isReasoningModeDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card disabled:cursor-not-allowed`}
+                        className={`${reasoningModeEnabled && !isReasoningModeDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-card disabled:cursor-not-allowed`}
                         role="switch"
                         aria-checked={reasoningModeEnabled}
                         disabled={isLoading || isReasoningModeDisabled}
                     >
                         <span
                             aria-hidden="true"
-                            className={`${reasoningModeEnabled && !isReasoningModeDisabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                            className={`${reasoningModeEnabled && !isReasoningModeDisabled ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                         />
                     </button>
                 </div>
                 <div 
-                    className={`flex items-center justify-between bg-muted/30 p-4 rounded-lg border border-input transition-opacity ${isDiagramGenerationDisabled ? 'opacity-60' : ''}`}
+                    className={`flex items-center justify-between bg-muted/30 p-2.5 rounded-lg border border-input transition-opacity ${isDiagramGenerationDisabled ? 'opacity-60' : ''}`}
                     title={isDiagramGenerationDisabled ? "Diagram generation is only available with the Gemini provider." : ""}
                 >
                     <label htmlFor="generate-diagrams-toggle" className={`flex flex-col flex-grow pr-4 ${isDiagramGenerationDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
@@ -212,18 +212,18 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                         type="button"
                         id="generate-diagrams-toggle"
                         onClick={() => !isDiagramGenerationDisabled && setGenerateDiagrams(!generateDiagrams)}
-                        className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card disabled:cursor-not-allowed`}
+                        className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-card disabled:cursor-not-allowed`}
                         role="switch"
                         aria-checked={generateDiagrams}
                         disabled={isLoading || isDiagramGenerationDisabled}
                     >
                         <span
                             aria-hidden="true"
-                            className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                            className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                         />
                     </button>
                 </div>
-                 <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg border border-input">
+                 <div className="flex items-center justify-between bg-muted/30 p-2.5 rounded-lg border border-input">
                     <label htmlFor="generate-html-toggle" className="flex flex-col cursor-pointer flex-grow pr-4">
                         <span className="font-medium text-foreground">Generate HTML Preview</span>
                         <span className="text-sm text-muted-foreground">Fastest when disabled. Skips the final styled preview stage.</span>
@@ -232,14 +232,14 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                         type="button"
                         id="generate-html-toggle"
                         onClick={() => setGenerateHtmlPreview(!generateHtmlPreview)}
-                        className={`${generateHtmlPreview ? 'bg-primary' : 'bg-muted'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card`}
+                        className={`${generateHtmlPreview ? 'bg-primary' : 'bg-muted'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-card`}
                         role="switch"
                         aria-checked={generateHtmlPreview}
                         disabled={isLoading}
                     >
                         <span
                             aria-hidden="true"
-                            className={`${generateHtmlPreview ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                            className={`${generateHtmlPreview ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                         />
                     </button>
                 </div>

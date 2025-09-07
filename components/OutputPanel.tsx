@@ -114,11 +114,11 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
     };
 
     return (
-        <div className="bg-card text-card-foreground border rounded-lg p-6 flex flex-col shadow-lg shadow-black/20">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">2. View Output</h2>
+        <div className="bg-card text-card-foreground border rounded-lg p-3 flex flex-col shadow-lg shadow-black/20">
+            <h2 className="text-xl font-semibold text-foreground mb-3">2. View Output</h2>
 
             {hasPipelineStarted && (
-                 <div className="mb-4">
+                 <div className="mb-3">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-primary/90">
                             {error ? 'Pipeline Failed' : loadingStage ? `Running: ${loadingStage}` : 'Pipeline Complete'}
@@ -138,7 +138,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
                 </div>
             )}
             
-            <div className="flex flex-wrap items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-4 gap-1">
+            <div className="flex flex-wrap items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-3 gap-1">
                 {visibleStages.map(({ id, title, icon }) => {
                     const status = stageStatus[id];
                     const IconComponent = 
@@ -161,7 +161,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
                 })}
             </div>
 
-            <div className="flex-grow bg-background/50 rounded-md p-4 min-h-[30rem] relative border border-input overflow-hidden">
+            <div className="flex-grow bg-background/50 rounded-md p-3 min-h-[16rem] relative border border-input overflow-hidden">
                 <div className={`absolute inset-0 transition-opacity duration-300 ease-in-out flex flex-col items-center justify-center h-full text-center text-muted-foreground ${!hasPipelineStarted ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                     <div className="w-16 h-16 mb-4 opacity-50">{ALL_STAGES[0].icon}</div>
                     <h3 className="text-lg font-semibold">Your generated note will appear here.</h3>

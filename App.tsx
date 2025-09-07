@@ -505,7 +505,7 @@ const App: React.FC = () => {
                 }}
                 onNewNote={handleNewNote} 
             />
-            <main className="flex-grow container mx-auto p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <main className="flex-grow container mx-auto p-3 md:p-4 lg:p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <InputPanel
                     topic={topic}
                     setTopic={setTopic}
