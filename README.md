@@ -46,26 +46,35 @@ Whether you're conducting academic research, writing an in-depth article, or sim
     cd obsidian-knowledge-architect
     ```
 
-2.  **Start the development environment:**
+2.  **Configure Environment Variables:**
+    Create a `.env.local` file from the example template:
+    ```bash
+    cp .env.local.example .env.local
+    ```
+    Edit the `.env.local` file and add your API keys:
+    ```
+    GEMINI_API_KEY=your_actual_gemini_api_key_here
+    ```
+
+3.  **Start the development environment:**
     This command will start a container with hot-reloading enabled.
     ```bash
     docker compose up
     ```
 
-3.  **Access and Configure:**
+4.  **Access and Configure:**
     - **Access:** [http://localhost:8000](http://localhost:8000)
-    - **Configure API Keys:** Once the application is running, open the **Settings** panel to enter your API keys for the desired AI providers (e.g., Google Gemini, OpenRouter).
+    - **Configure API Keys:** You can also configure API keys directly in the **Settings** panel for the desired AI providers (e.g., Google Gemini, OpenRouter).
 
-4.  **Production Deployment:**
+5.  **Production Deployment:**
     To run the application in an optimized production environment:
     ```bash
-    # Build the application locally
-    npm run build
-    
     # Start the production container
     docker compose --profile production up
     ```
     - **Production:** [http://localhost:8080](http://localhost:8080)
+    
+    **Note:** The production profile doesn't require the `.env.local` file as it uses a different configuration approach.
 
 ---
 
