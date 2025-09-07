@@ -151,7 +151,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                             <option value="pro">Gemini 2.5 Pro (Higher Quality)</option>
                             <option value="flash">Gemini 2.5 Flash (Faster)</option>
                         </select>
-                        <p className="text-sm text-muted-foreground">"Pro" provides better results but is slower. "Flash" is faster for quick iterations.</p>
+
                     </div>
                  )}
                 {(provider === 'openrouter' || provider === 'ollama') && (
