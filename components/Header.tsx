@@ -1,15 +1,16 @@
 
 
 import React from 'react';
-import { BrainIcon, SettingsIcon, HistoryIcon, PlusIcon } from './Icons';
+import { BrainIcon, SettingsIcon, HistoryIcon, PlusIcon, DashboardIcon } from './Icons';
 
 interface HeaderProps {
     onOpenSettings: () => void;
     onOpenHistory: () => void;
     onNewNote: () => void;
+    onOpenErrorDashboard: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenHistory, onNewNote }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenHistory, onNewNote, onOpenErrorDashboard }) => {
     return (
         <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
             <div className="container mx-auto px-4 md:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -35,6 +36,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenHistory, o
                         title="Open history"
                     >
                         <HistoryIcon className="w-6 h-6" />
+                    </button>
+                    <button
+                        onClick={onOpenErrorDashboard}
+                        className="p-2 rounded-full text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                        aria-label="Open error dashboard"
+                        title="Error Dashboard"
+                    >
+                        <DashboardIcon className="w-6 h-6" />
                     </button>
                     <button
                         onClick={onOpenSettings}

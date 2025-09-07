@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { runKnowledgePipeline, generateTitle, PipelineError } from './services/aiService';
-import type { Stage, StageOutputs, AppError, ModelConfigType } from './types';
+import type { Stage, StageOutputs, AppError, ModelConfigType, EnhancedError } from './types';
 import { useSettings } from './hooks/useSettings';
 import { useHistory } from './hooks/useHistory';
 import { InputPanel } from './components/InputPanel';
@@ -9,13 +9,27 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { SettingsModal } from './components/SettingsModal';
 import { HistoryPanel } from './components/HistoryPanel';
+import { NotificationSystem } from './components/NotificationSystem';
+import ErrorDashboard from './components/ErrorDashboard';
 import type { HistoryItem } from './hooks/useHistory';
+import { errorManager, createFileError, createValidationError } from './services/errorService';
+import { loggingService, logUserAction, logPerformanceMetric } from './services/loggingService';
 
 declare const pdfjsLib: any;
 declare const mammoth: any;
 declare const JSZip: any;
 
 const getFriendlyErrorMessage = (err: unknown): AppError => {
+    // Handle enhanced errors from the new error system
+    if (err instanceof PipelineError && err.enhancedError) {
+        const enhancedError = err.enhancedError as EnhancedError;
+        return {
+            context: enhancedError.context,
+            message: enhancedError.userAction || enhancedError.message,
+            details: enhancedError.details
+        };
+    }
+    
     const friendlyError: AppError = {
         context: 'setup',
         message: 'An unexpected error occurred. Please check the console for more details.',
@@ -54,6 +68,31 @@ const App: React.FC = () => {
     const [generateHtmlPreview, setGenerateHtmlPreview] = useState<boolean>(true);
     const [modelConfig, setModelConfig] = useState<ModelConfigType>('pro');
     
+    // Setup error handling and logging
+    useEffect(() => {
+        // Log application startup
+        loggingService.info('Application started', 'app', 'startup', {
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            viewport: {
+                width: window.innerWidth,
+                height: window.innerHeight
+            }
+        });
+        
+        // Setup custom event listeners for error system integration
+        const handleOpenSettingsModal = () => {
+            setIsSettingsOpen(true);
+            logUserAction('open_settings_modal', 'error_action');
+        };
+        
+        window.addEventListener('open-settings-modal', handleOpenSettingsModal);
+        
+        return () => {
+            window.removeEventListener('open-settings-modal', handleOpenSettingsModal);
+        };
+    }, []);
+    
     const [outputs, setOutputs] = useState<StageOutputs>({
         synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', 
         diagramGenerator: '', finalizer: '', htmlTranslator: '',
@@ -68,6 +107,7 @@ const App: React.FC = () => {
     const { history, addHistoryItem, deleteHistoryItem, clearHistory } = useHistory();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [isErrorDashboardOpen, setIsErrorDashboardOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -94,9 +134,33 @@ const App: React.FC = () => {
 
         const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
         if (!topic.trim() || !combinedInput.trim()) {
-            setError({ context: 'setup', message: 'Please provide a topic and some input text or a file.' });
+            const validationError = createValidationError(
+                'Please provide a topic and some input text or a file.',
+                'setup',
+                { topicLength: topic.length, inputLength: combinedInput.length, hasFile: !!fileContent, hasText: !!rawText }
+            );
+            setError({ context: 'setup', message: validationError.message });
             return;
         }
+        
+        // Log pipeline start
+        const pipelineId = `pipeline_${Date.now()}`;
+        logUserAction('start_pipeline', 'pipeline', {
+            pipelineId,
+            topic,
+            inputLength: combinedInput.length,
+            provider: settings.provider,
+            modelConfig,
+            generateDiagrams: generateDiagrams && settings.provider === 'gemini',
+            generateHtmlPreview
+        });
+        
+        loggingService.startPerformanceTracking(pipelineId, {
+            inputLength: combinedInput.length,
+            provider: settings.provider,
+            modelConfig,
+            stages: ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'diagramGenerator', 'finalizer', 'htmlTranslator']
+        });
 
         let totalChars = 0;
         const startTime = Date.now();
@@ -116,6 +180,11 @@ const App: React.FC = () => {
                 switch (update.type) {
                     case 'stage_start':
                         setLoadingStage(update.stage);
+                        loggingService.info(`Pipeline stage started: ${update.stage}`, 'pipeline', 'stage_start', {
+                            pipelineId,
+                            stage: update.stage,
+                            provider: settings.provider
+                        });
                         break;
                     case 'chunk':
                         setOutputs(prev => ({
@@ -133,19 +202,67 @@ const App: React.FC = () => {
                         break;
                     case 'stage_end':
                         // Final content is built from chunks, but we could use this if needed
+                        loggingService.info(`Pipeline stage completed: ${update.stage}`, 'pipeline', 'stage_completion', {
+                            pipelineId,
+                            stage: update.stage,
+                            outputLength: finalOutputs[update.stage]?.length || 0,
+                            provider: settings.provider
+                        });
                         break;
                     case 'skipped':
                         setOutputs(prev => ({ ...prev, [update.stage]: 'Skipped' }));
                         finalOutputs[update.stage] = 'Skipped';
+                        loggingService.info(`Pipeline stage skipped: ${update.stage}`, 'pipeline', 'stage_skipped', {
+                            pipelineId,
+                            stage: update.stage,
+                            provider: settings.provider
+                        });
                         break;
                 }
             }
+            
             setLoadingStage(null);
+            
+            // Log successful pipeline completion
+            const metrics = loggingService.endPerformanceTracking(pipelineId, {
+                success: true,
+                finalOutputLength: finalOutputs.finalizer?.length || 0,
+                stagesCompleted: Object.keys(finalOutputs).filter(key => finalOutputs[key as keyof StageOutputs] && finalOutputs[key as keyof StageOutputs] !== 'Skipped').length
+            });
+            
+            logPerformanceMetric('pipeline_completion', metrics?.duration || 0, {
+                pipelineId,
+                provider: settings.provider,
+                success: true
+            });
+            
             if (finalOutputs.finalizer && finalOutputs.finalizer !== 'Skipped') {
                 addHistoryItem(topic, finalOutputs);
+                logUserAction('save_to_history', 'pipeline', {
+                    pipelineId,
+                    topic,
+                    outputLength: finalOutputs.finalizer.length
+                });
             }
         } catch (err) {
-            console.error("Pipeline execution failed:", err);
+            loggingService.error(
+                `Pipeline execution failed: ${err instanceof Error ? err.message : String(err)}`,
+                'pipeline',
+                'execution_failure',
+                {
+                    pipelineId,
+                    provider: settings.provider,
+                    modelConfig,
+                    inputLength: combinedInput.length,
+                    error: err instanceof Error ? err.message : String(err)
+                }
+            );
+            
+            loggingService.endPerformanceTracking(pipelineId, {
+                success: false,
+                error: err instanceof Error ? err.message : String(err)
+            });
+            
             setError(getFriendlyErrorMessage(err));
             setLoadingStage(null);
         }
@@ -154,17 +271,65 @@ const App: React.FC = () => {
     const handleGenerateTitle = useCallback(async () => {
         setError(null);
         const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
+        
         if (!combinedInput.trim()) {
-            setError({ context: 'setup', message: 'Please provide some input text or a file to generate a title.' });
+            const validationError = createValidationError(
+                'Please provide some input text or a file to generate a title.',
+                'title_generation',
+                { inputLength: combinedInput.length, hasFile: !!fileContent, hasText: !!rawText }
+            );
+            setError({ context: 'setup', message: validationError.message });
             return;
         }
+        
+        const titleGenerationId = `title_gen_${Date.now()}`;
+        logUserAction('generate_title', 'title_generation', {
+            titleGenerationId,
+            inputLength: combinedInput.length,
+            provider: settings.provider,
+            modelConfig
+        });
+        
+        loggingService.startPerformanceTracking(titleGenerationId, {
+            inputLength: combinedInput.length,
+            provider: settings.provider,
+            modelConfig
+        });
 
         setIsGeneratingTitle(true);
         try {
             const newTitle = await generateTitle(combinedInput, modelConfig, settings);
             setTopic(newTitle);
+            
+            loggingService.endPerformanceTracking(titleGenerationId, {
+                success: true,
+                titleLength: newTitle.length
+            });
+            
+            loggingService.info('Title generated successfully', 'title_generation', 'success', {
+                titleGenerationId,
+                titleLength: newTitle.length,
+                provider: settings.provider
+            });
         } catch (err) {
-            console.error("Title generation failed:", err);
+            loggingService.error(
+                `Title generation failed: ${err instanceof Error ? err.message : String(err)}`,
+                'title_generation',
+                'failure',
+                {
+                    titleGenerationId,
+                    provider: settings.provider,
+                    modelConfig,
+                    inputLength: combinedInput.length,
+                    error: err instanceof Error ? err.message : String(err)
+                }
+            );
+            
+            loggingService.endPerformanceTracking(titleGenerationId, {
+                success: false,
+                error: err instanceof Error ? err.message : String(err)
+            });
+            
             setError(getFriendlyErrorMessage(err));
         } finally {
             setIsGeneratingTitle(false);
@@ -176,6 +341,21 @@ const App: React.FC = () => {
         if (file) {
             setFileContent(`Parsing ${file.name}...`);
             setError(null);
+            
+            const fileProcessingId = `file_${Date.now()}`;
+            logUserAction('start_file_processing', 'file_processing', {
+                fileProcessingId,
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type
+            });
+            
+            loggingService.startPerformanceTracking(fileProcessingId, {
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type
+            });
+            
             try {
                 const extension = file.name.split('.').pop()?.toLowerCase() || 'file';
                 const reader = new FileReader();
@@ -184,7 +364,14 @@ const App: React.FC = () => {
                     reader.onload = async (e) => {
                         try {
                             const buffer = e.target?.result;
-                            if (!buffer) return reject(new Error('File buffer is empty.'));
+                            if (!buffer) {
+                                const fileError = createFileError(
+                                    'File buffer is empty.',
+                                    'file_processing',
+                                    { fileName: file.name, fileSize: file.size }
+                                );
+                                return reject(fileError);
+                            }
 
                             if (extension === 'pdf') {
                                 const typedarray = new Uint8Array(buffer as ArrayBuffer);
@@ -224,12 +411,23 @@ const App: React.FC = () => {
                                 resolve(buffer as string); // Fallback for text files
                             }
                         } catch (err) {
-                            console.error(`Error parsing ${extension} file:`, err);
-                            reject(new Error(`Failed to parse ${extension} file. It may be corrupt or in an unsupported format.`));
+                            const fileError = createFileError(
+                                `Failed to parse ${extension} file. It may be corrupt or in an unsupported format.`,
+                                'file_processing',
+                                { fileName: file.name, fileSize: file.size, extension, error: err instanceof Error ? err.message : String(err) }
+                            );
+                            reject(fileError);
                         }
                     };
 
-                    reader.onerror = () => reject(new Error('Failed to read the file.'));
+                    reader.onerror = () => {
+                        const fileError = createFileError(
+                            'Failed to read the file.',
+                            'file_processing',
+                            { fileName: file.name, fileSize: file.size }
+                        );
+                        reject(fileError);
+                    };
                     
                     if (['pdf', 'docx', 'pptx'].includes(extension)) {
                         reader.readAsArrayBuffer(file);
@@ -239,7 +437,37 @@ const App: React.FC = () => {
                 });
 
                 setFileContent(content);
+                
+                // Log successful file processing
+                loggingService.endPerformanceTracking(fileProcessingId, {
+                    success: true,
+                    contentLength: content.length
+                });
+                
+                loggingService.info('File processed successfully', 'file_processing', 'success', {
+                    fileProcessingId,
+                    fileName: file.name,
+                    contentLength: content.length
+                });
+                
             } catch (err: unknown) {
+                loggingService.error(
+                    `File processing failed: ${err instanceof Error ? err.message : String(err)}`,
+                    'file_processing',
+                    'failure',
+                    {
+                        fileProcessingId,
+                        fileName: file.name,
+                        fileSize: file.size,
+                        error: err instanceof Error ? err.message : String(err)
+                    }
+                );
+                
+                loggingService.endPerformanceTracking(fileProcessingId, {
+                    success: false,
+                    error: err instanceof Error ? err.message : String(err)
+                });
+                
                 const message = err instanceof Error ? err.message : "An unknown error occurred during file parsing.";
                 setError({ context: 'setup', message });
                 setFileContent('');
@@ -268,7 +496,15 @@ const App: React.FC = () => {
                 onDelete={deleteHistoryItem}
                 onClear={clearHistory}
             />
-            <Header onOpenSettings={() => setIsSettingsOpen(true)} onOpenHistory={() => setIsHistoryOpen(true)} onNewNote={handleNewNote} />
+            <Header 
+                onOpenSettings={() => setIsSettingsOpen(true)} 
+                onOpenHistory={() => setIsHistoryOpen(true)} 
+                onOpenErrorDashboard={() => {
+                    setIsErrorDashboardOpen(true);
+                    logUserAction('open_error_dashboard', 'monitoring');
+                }}
+                onNewNote={handleNewNote} 
+            />
             <main className="flex-grow container mx-auto p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <InputPanel
                     topic={topic}
@@ -316,6 +552,11 @@ const App: React.FC = () => {
                     setIsSettingsOpen(false);
                 }}
             />
+            <ErrorDashboard
+                isOpen={isErrorDashboardOpen}
+                onClose={() => setIsErrorDashboardOpen(false)}
+            />
+            <NotificationSystem />
         </div>
     );
 };
