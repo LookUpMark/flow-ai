@@ -9,7 +9,7 @@ export interface HistoryItem {
     outputs: StageOutputs;
 }
 
-const HISTORY_KEY = 'obsidian-knowledge-architect-history';
+const HISTORY_KEY = 'flowai-history';
 
 export const useHistory = () => {
     const [history, setHistory] = useState<HistoryItem[]>(() => {

@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenHistory, o
                 <a href="/" className="flex items-center group">
                     <BrainIcon className="w-8 h-8 mr-3 text-primary transition-all duration-300 group-hover:drop-shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
                     <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight transition-colors duration-300 group-hover:text-primary/90">
-                        Obsidian Knowledge Architect
+                        FlowAI
                     </h1>
                 </a>
                 <div className="flex items-center gap-2">

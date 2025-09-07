@@ -21,7 +21,7 @@ const DEFAULTS: AppSettings = {
     reasoningModeEnabled: true,
 };
 
-const SETTINGS_KEY = 'obsidian-knowledge-architect-settings';
+const SETTINGS_KEY = 'flowai-settings';
 
 export const useSettings = (): [AppSettings, (settings: AppSettings) => void] => {
     const [settings, setSettings] = useState<AppSettings>(() => {

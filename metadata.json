@@ -1,5 +1,5 @@
 {
-  "name": "Obsidian Knowledge Architect",
+  "name": "FlowAI",
   "description": "An AI-powered pipeline that transforms raw text and files into perfectly structured and formatted Markdown notes for Obsidian, following a 4-step process: Synthesize, Condense, Enhance, and Finalize.",
   "requestFramePermissions": []
 }

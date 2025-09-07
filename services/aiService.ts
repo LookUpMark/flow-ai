@@ -97,7 +97,7 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                 if (!apiKey || !model) throw new Error("OpenRouter API key and model must be configured in settings.");
                 const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://obsidian-knowledge-architect.web.app', 'X-Title': 'Obsidian Knowledge Architect' },
+                    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://flowai.web.app', 'X-Title': 'FlowAI' },
                     body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: effectiveTemperature, stream: false })
                 });
                 if (!response.ok) throw response;
@@ -149,7 +149,7 @@ async function* generateTextStream(prompt: string, settings: AppSettings, modelC
             if (!apiKey || !model) throw new Error("OpenRouter API key and model must be configured in settings.");
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://obsidian-knowledge-architect.web.app', 'X-Title': 'Obsidian Knowledge Architect' },
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://flowai.web.app', 'X-Title': 'FlowAI' },
                 body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: effectiveTemperature, stream: true })
             });
             if (!response.ok || !response.body) throw response;

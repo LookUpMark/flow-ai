@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>Obsidian Knowledge Architect</h1>
+  <h1>FlowAI</h1>
   <p><strong>A powerful AI-driven knowledge synthesis platform for transforming ideas into structured, actionable insights.</strong></p>
   
   <p>
@@ -15,9 +15,9 @@
 
 ## 🌟 Overview
 
-**Obsidian Knowledge Architect** is an intelligent knowledge management tool designed to help researchers, writers, and knowledge workers transform raw information into structured, interconnected insights. The platform leverages advanced AI capabilities to analyze, synthesize, and organize content from multiple formats and sources.
+**FlowAI** is an intelligent knowledge management tool designed to help researchers, writers, and knowledge workers transform raw information into structured, interconnected insights. The platform leverages advanced AI capabilities to analyze, synthesize, and organize content from multiple formats and sources.
 
-Whether you're conducting academic research, writing an in-depth article, or simply trying to make sense of a large amount of information, Obsidian Knowledge Architect is your partner for clarity and structure.
+Whether you're conducting academic research, writing an in-depth article, or simply trying to make sense of a large amount of information, FlowAI is your partner for clarity and structure.
 
 ## ✨ Key Features
 

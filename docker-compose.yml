@@ -1,7 +1,7 @@
 
 
 services:
-  obsidian-knowledge-architect:
+  flowai:
     build:
       context: .
       dockerfile: Dockerfile
@@ -18,7 +18,7 @@ services:
     stdin_open: true
     tty: true
 
-  obsidian-knowledge-architect-prod:
+  flowai-prod:
     build:
       context: .
       dockerfile: Dockerfile
