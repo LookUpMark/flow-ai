@@ -3,11 +3,13 @@ import { GoogleGenAI, GenerateImagesResponse } from "@google/genai";
 import { STAGE_PROMPTS } from '../constants';
 import type { Stage, ModelConfigType, AppSettings } from '../types';
 
-if (!process.env.API_KEY) {
-    console.warn("API_KEY environment variable not set. Gemini provider will not work.");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+const getGeminiClient = (settings: AppSettings) => {
+    const apiKey = settings.config.gemini.apiKey || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error("Gemini API key is not configured. Please set it in the application settings.");
+    }
+    return new GoogleGenAI({ apiKey });
+};
 
 export class PipelineError extends Error {
     constructor(
@@ -86,6 +88,7 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
     const apiCall = async (): Promise<string> => {
         switch (settings.provider) {
             case 'gemini': {
+                const ai = getGeminiClient(settings);
                 const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: genAIConfig });
                 return response.text;
             }
@@ -134,6 +137,7 @@ async function* generateTextStream(prompt: string, settings: AppSettings, modelC
 
     switch (settings.provider) {
         case 'gemini': {
+            const ai = getGeminiClient(settings);
             const response = await ai.models.generateContentStream({ model: 'gemini-2.5-flash', contents: prompt, config: genAIConfig });
             for await (const chunk of response) {
                 yield chunk.text;
@@ -216,12 +220,14 @@ const generateDiagramImage = async (mermaidCode: string, modelConfig: ModelConfi
     const descriptivePrompt = await createDiagramPrompt(mermaidCode, modelConfig, settings);
     const finalPrompt = `${descriptivePrompt}. Minimalist vector art style. Clean lines, simple shapes, and a light, neutral background. High-contrast, easy-to-read text.`;
     
-    // FIX: Explicitly type the apiCall to ensure withRetry infers the correct return type.
-    const apiCall = (): Promise<GenerateImagesResponse> => ai.models.generateImages({
-        model: 'imagen-4.0-generate-001',
-        prompt: finalPrompt,
-        config: { numberOfImages: 1, outputMimeType: 'image/jpeg', aspectRatio: '16:9' },
-    });
+    const apiCall = (): Promise<GenerateImagesResponse> => {
+        const ai = getGeminiClient(settings);
+        return ai.models.generateImages({
+            model: 'imagen-4.0-generate-001',
+            prompt: finalPrompt,
+            config: { numberOfImages: 1, outputMimeType: 'image/jpeg', aspectRatio: '16:9' },
+        });
+    };
     
     const response = await withRetry(apiCall, 'generateDiagramImage');
     const base64ImageBytes = response.generatedImages?.[0]?.image?.imageBytes;

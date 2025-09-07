@@ -37,7 +37,9 @@ export type ApiProvider = 'gemini' | 'openrouter' | 'ollama';
 
 // Defines the configuration structure for each API provider.
 export interface ProviderSettings {
-    gemini: {}; // No specific config needed, API key is from env
+    gemini: {
+        apiKey: string;
+    };
     openrouter: {
         apiKey: string;
         models: string[];

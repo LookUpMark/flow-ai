@@ -181,11 +181,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                     <div className="border-b border-border -mx-6"></div>
 
                     {localSettings.provider === 'gemini' && (
-                        <div className="space-y-2 animate-in fade-in-0">
+                        <div className="space-y-4 animate-in fade-in-0">
                             <h3 className="font-semibold">Google Gemini</h3>
                             <p className="text-sm text-muted-foreground">
-                                Uses the API key provided in the application's environment. Image generation is only available with this provider.
+                                Enter your Google Gemini API key below. Image generation is only available with this provider.
                             </p>
+                            <InputField
+                                id="gemini-apikey"
+                                label="Gemini API Key"
+                                type="password"
+                                value={localSettings.config.gemini.apiKey}
+                                onChange={(e) => updateProviderConfig('gemini', 'apiKey', e.target.value)}
+                                placeholder="AIza..."
+                             />
                         </div>
                     )}
 

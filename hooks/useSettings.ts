@@ -4,7 +4,9 @@ import type { AppSettings } from '../types';
 const DEFAULTS: AppSettings = {
     provider: 'gemini',
     config: {
-        gemini: {},
+        gemini: {
+            apiKey: '',
+        },
         openrouter: {
             apiKey: '',
             models: ['deepseek/deepseek-chat-v3.1:free', 'mistralai/mistral-7b-instruct'],
