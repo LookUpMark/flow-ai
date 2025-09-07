@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   obsidian-knowledge-architect:
