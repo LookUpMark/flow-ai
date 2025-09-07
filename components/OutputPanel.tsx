@@ -114,11 +114,11 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
     };
 
     return (
-        <div className="bg-card text-card-foreground border rounded-lg p-3 flex flex-col shadow-lg shadow-black/20">
-            <h2 className="text-xl font-semibold text-foreground mb-3">2. View Output</h2>
+        <div className="bg-card text-card-foreground border rounded-lg p-2 flex flex-col shadow-lg shadow-black/20">
+            <h2 className="text-lg font-semibold text-foreground mb-2">2. View Output</h2>
 
             {hasPipelineStarted && (
-                 <div className="mb-3">
+                 <div className="mb-2">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-primary/90">
                             {error ? 'Pipeline Failed' : loadingStage ? `Running: ${loadingStage}` : 'Pipeline Complete'}
@@ -138,7 +138,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
                 </div>
             )}
             
-            <div className="flex flex-wrap items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-3 gap-1">
+            <div className="flex flex-wrap items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-2 gap-1">
                 {visibleStages.map(({ id, title, icon }) => {
                     const status = stageStatus[id];
                     const IconComponent = 

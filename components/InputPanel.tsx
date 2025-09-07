@@ -67,8 +67,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     const isReasoningModeDisabled = provider === 'ollama';
     
     return (
-        <div className="bg-card text-card-foreground border rounded-lg p-3 flex flex-col gap-3 h-full shadow-lg shadow-black/20">
-            <h2 className="text-xl font-semibold text-foreground">1. Provide Input</h2>
+        <div className="bg-card text-card-foreground border rounded-lg p-2 flex flex-col gap-2 h-full shadow-lg shadow-black/20">
+            <h2 className="text-lg font-semibold text-foreground">1. Provide Input</h2>
             
             {error && (
                 <div className="bg-destructive/10 border border-destructive/50 text-destructive-foreground px-4 py-3 rounded-md relative flex items-start gap-3" role="alert">
@@ -134,7 +134,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                     onChange={onFileChange}
                     className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm text-muted-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                 />
-                <p className="text-xs text-muted-foreground">Plain text, .pdf, .docx, and .pptx files work best.</p>
+
             </div>
 
             <div className="space-y-2">
@@ -178,68 +178,65 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                     </div>
                 )}
                 <div 
-                    className={`flex items-center justify-between bg-muted/30 p-2.5 rounded-lg border border-input transition-opacity ${isReasoningModeDisabled ? 'opacity-60' : ''}`}
+                    className={`flex items-center justify-between bg-muted/30 p-2 rounded-md border border-input transition-opacity ${isReasoningModeDisabled ? 'opacity-60' : ''}`}
                     title={isReasoningModeDisabled ? "Reasoning mode is not available for the Ollama provider." : "Toggles creative/reasoning capabilities. Disabling it may result in faster, more deterministic responses."}
                 >
-                    <label htmlFor="reasoning-mode-toggle" className={`flex flex-col flex-grow pr-4 ${isReasoningModeDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                        <span className="font-medium text-foreground">Enable Reasoning Mode</span>
-                        <span className="text-sm text-muted-foreground">Higher quality vs. faster, more deterministic output.</span>
+                    <label htmlFor="reasoning-mode-toggle" className={`flex items-center flex-grow pr-3 ${isReasoningModeDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                        <span className="text-sm font-medium text-foreground">Reasoning Mode</span>
                     </label>
                     <button
                         type="button"
                         id="reasoning-mode-toggle"
                         onClick={() => !isReasoningModeDisabled && setReasoningModeEnabled(!reasoningModeEnabled)}
-                        className={`${reasoningModeEnabled && !isReasoningModeDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-card disabled:cursor-not-allowed`}
+                        className={`${reasoningModeEnabled && !isReasoningModeDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-card disabled:cursor-not-allowed`}
                         role="switch"
                         aria-checked={reasoningModeEnabled}
                         disabled={isLoading || isReasoningModeDisabled}
                     >
                         <span
                             aria-hidden="true"
-                            className={`${reasoningModeEnabled && !isReasoningModeDisabled ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                            className={`${reasoningModeEnabled && !isReasoningModeDisabled ? 'translate-x-3' : 'translate-x-0'} pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                         />
                     </button>
                 </div>
                 <div 
-                    className={`flex items-center justify-between bg-muted/30 p-2.5 rounded-lg border border-input transition-opacity ${isDiagramGenerationDisabled ? 'opacity-60' : ''}`}
+                    className={`flex items-center justify-between bg-muted/30 p-2 rounded-md border border-input transition-opacity ${isDiagramGenerationDisabled ? 'opacity-60' : ''}`}
                     title={isDiagramGenerationDisabled ? "Diagram generation is only available with the Gemini provider." : ""}
                 >
-                    <label htmlFor="generate-diagrams-toggle" className={`flex flex-col flex-grow pr-4 ${isDiagramGenerationDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                        <span className="font-medium text-foreground">Generate Diagram Images</span>
-                        <span className="text-sm text-muted-foreground">Slower, portable images. Only available for Gemini provider.</span>
+                    <label htmlFor="generate-diagrams-toggle" className={`flex items-center flex-grow pr-3 ${isDiagramGenerationDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                        <span className="text-sm font-medium text-foreground">Diagram Images</span>
                     </label>
                     <button
                         type="button"
                         id="generate-diagrams-toggle"
                         onClick={() => !isDiagramGenerationDisabled && setGenerateDiagrams(!generateDiagrams)}
-                        className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-card disabled:cursor-not-allowed`}
+                        className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-card disabled:cursor-not-allowed`}
                         role="switch"
                         aria-checked={generateDiagrams}
                         disabled={isLoading || isDiagramGenerationDisabled}
                     >
                         <span
                             aria-hidden="true"
-                            className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                            className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'translate-x-3' : 'translate-x-0'} pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                         />
                     </button>
                 </div>
-                 <div className="flex items-center justify-between bg-muted/30 p-2.5 rounded-lg border border-input">
-                    <label htmlFor="generate-html-toggle" className="flex flex-col cursor-pointer flex-grow pr-4">
-                        <span className="font-medium text-foreground">Generate HTML Preview</span>
-                        <span className="text-sm text-muted-foreground">Fastest when disabled. Skips the final styled preview stage.</span>
+                 <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md border border-input">
+                    <label htmlFor="generate-html-toggle" className="flex items-center cursor-pointer flex-grow pr-3">
+                        <span className="text-sm font-medium text-foreground">HTML Preview</span>
                     </label>
                     <button
                         type="button"
                         id="generate-html-toggle"
                         onClick={() => setGenerateHtmlPreview(!generateHtmlPreview)}
-                        className={`${generateHtmlPreview ? 'bg-primary' : 'bg-muted'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-card`}
+                        className={`${generateHtmlPreview ? 'bg-primary' : 'bg-muted'} relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-card`}
                         role="switch"
                         aria-checked={generateHtmlPreview}
                         disabled={isLoading}
                     >
                         <span
                             aria-hidden="true"
-                            className={`${generateHtmlPreview ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                            className={`${generateHtmlPreview ? 'translate-x-3' : 'translate-x-0'} pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                         />
                     </button>
                 </div>
