@@ -53,7 +53,7 @@ Whether you're conducting academic research, writing an in-depth article, or sim
     ```
 
 3.  **Access and Configure:**
-    - **Access:** [http://localhost:5173](http://localhost:5173)
+    - **Access:** [http://localhost:8000](http://localhost:8000)
     - **Configure API Keys:** Once the application is running, open the **Settings** panel to enter your API keys for the desired AI providers (e.g., Google Gemini, OpenRouter).
 
 4.  **Production Deployment:**
