@@ -48,12 +48,21 @@ Obsidian Knowledge Architect is an intelligent knowledge management tool designe
 
 3. **Run development environment**
    ```bash
-   docker-compose up
+   docker compose up
    ```
 
 4. **Access the application**
    - Development: http://localhost:5173
-   - Production build: `docker compose --profile production up` (http://localhost:8080)
+
+5. **For production deployment**
+   ```bash
+   # First build the application locally
+   npm run build
+   
+   # Then run production container
+   docker compose --profile production up
+   ```
+   - Production: http://localhost:8080
 
 ### 📦 Local Node.js Setup
 
