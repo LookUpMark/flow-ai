@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SparklesIcon, AlertTriangleIcon } from './Icons';
 import type { AppError, ModelConfigType, ApiProvider, AppSettings } from '../types';
@@ -27,6 +26,7 @@ interface InputPanelProps {
     setReasoningModeEnabled: (value: boolean) => void;
     settings: AppSettings;
     saveSettings: (settings: AppSettings) => void;
+    fileInputRef: React.RefObject<HTMLInputElement>;
 }
 
 const GenerateIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -40,7 +40,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     topic, setTopic, rawText, setRawText, onFileChange, onGenerate, isLoading, error, setError,
     onGenerateTitle, isGeneratingTitle, hasContent, generateDiagrams, setGenerateDiagrams,
     generateHtmlPreview, setGenerateHtmlPreview, provider, modelConfig, setModelConfig,
-    reasoningModeEnabled, setReasoningModeEnabled, settings, saveSettings
+    reasoningModeEnabled, setReasoningModeEnabled, settings, saveSettings, fileInputRef
 }) => {
 
     const handleClearError = () => {
@@ -127,6 +127,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             <div className="flex flex-col gap-2">
                  <label htmlFor="file" className="text-sm font-medium text-muted-foreground">Or Upload a File</label>
                  <input
+                    ref={fileInputRef}
                     id="file"
                     type="file"
                     accept=".txt,.md,.js,.ts,.tsx,.py,.html,.css,.pdf,.docx,.pptx"

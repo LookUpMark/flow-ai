@@ -1,13 +1,15 @@
-
-import React, { useState, useCallback } from 'react';
-import { runKnowledgePipeline, generateTitle, PipelineError, PipelineUpdate } from './services/aiService';
+import React, { useState, useCallback, useRef } from 'react';
+import { runKnowledgePipeline, generateTitle, PipelineError } from './services/aiService';
 import type { Stage, StageOutputs, AppError, ModelConfigType } from './types';
 import { useSettings } from './hooks/useSettings';
+import { useHistory } from './hooks/useHistory';
 import { InputPanel } from './components/InputPanel';
 import { OutputPanel } from './components/OutputPanel';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { SettingsModal } from './components/SettingsModal';
+import { HistoryPanel } from './components/HistoryPanel';
+import type { HistoryItem } from './hooks/useHistory';
 
 declare const pdfjsLib: any;
 declare const mammoth: any;
@@ -63,7 +65,27 @@ const App: React.FC = () => {
     const [throughput, setThroughput] = useState<number>(0);
 
     const [settings, saveSettings] = useSettings();
+    const { history, addHistoryItem, deleteHistoryItem, clearHistory } = useHistory();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+
+    const handleNewNote = useCallback(() => {
+        setTopic('');
+        setRawText('');
+        setFileContent('');
+        setOutputs({
+            synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', 
+            diagramGenerator: '', finalizer: '', htmlTranslator: '',
+        });
+        setError(null);
+        setLoadingStage(null);
+        setThroughput(0);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    }, []);
 
     const handleGenerate = useCallback(async () => {
         setError(null);
@@ -78,6 +100,7 @@ const App: React.FC = () => {
 
         let totalChars = 0;
         const startTime = Date.now();
+        const finalOutputs: StageOutputs = { synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', diagramGenerator: '', finalizer: '', htmlTranslator: '' };
 
         try {
             const pipelineStream = runKnowledgePipeline(
@@ -99,6 +122,7 @@ const App: React.FC = () => {
                             ...prev,
                             [update.stage]: (prev[update.stage] || '') + update.content
                         }));
+                         finalOutputs[update.stage] = (finalOutputs[update.stage] || '') + update.content;
                         totalChars += update.content.length;
                         const elapsedSeconds = (Date.now() - startTime) / 1000;
                         if (elapsedSeconds > 0.2) { // Avoid division by zero and noisy initial values
@@ -112,16 +136,20 @@ const App: React.FC = () => {
                         break;
                     case 'skipped':
                         setOutputs(prev => ({ ...prev, [update.stage]: 'Skipped' }));
+                        finalOutputs[update.stage] = 'Skipped';
                         break;
                 }
             }
             setLoadingStage(null);
+            if (finalOutputs.finalizer && finalOutputs.finalizer !== 'Skipped') {
+                addHistoryItem(topic, finalOutputs);
+            }
         } catch (err) {
             console.error("Pipeline execution failed:", err);
             setError(getFriendlyErrorMessage(err));
             setLoadingStage(null);
         }
-    }, [topic, rawText, fileContent, generateDiagrams, generateHtmlPreview, modelConfig, settings]);
+    }, [topic, rawText, fileContent, generateDiagrams, generateHtmlPreview, modelConfig, settings, addHistoryItem]);
     
     const handleGenerateTitle = useCallback(async () => {
         setError(null);
@@ -219,12 +247,28 @@ const App: React.FC = () => {
         }
     };
 
+    const handleLoadHistory = (item: HistoryItem) => {
+        setError(null);
+        setTopic(item.topic);
+        setOutputs(item.outputs);
+        setThroughput(0);
+        setLoadingStage(null);
+    };
+
     const isLoading = loadingStage !== null;
     const hasContent = !!(fileContent.trim() || rawText.trim());
 
     return (
         <div className="min-h-screen flex flex-col font-sans">
-            <Header onOpenSettings={() => setIsSettingsOpen(true)} />
+            <HistoryPanel
+                isOpen={isHistoryOpen}
+                onClose={() => setIsHistoryOpen(false)}
+                history={history}
+                onLoad={handleLoadHistory}
+                onDelete={deleteHistoryItem}
+                onClear={clearHistory}
+            />
+            <Header onOpenSettings={() => setIsSettingsOpen(true)} onOpenHistory={() => setIsHistoryOpen(true)} onNewNote={handleNewNote} />
             <main className="flex-grow container mx-auto p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <InputPanel
                     topic={topic}
@@ -250,6 +294,7 @@ const App: React.FC = () => {
                     setReasoningModeEnabled={(value) => saveSettings({ ...settings, reasoningModeEnabled: value })}
                     settings={settings}
                     saveSettings={saveSettings}
+                    fileInputRef={fileInputRef}
                 />
                 <OutputPanel
                     outputs={outputs}
