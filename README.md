@@ -132,32 +132,12 @@ The application follows a modular, component-based architecture to ensure mainta
 -   **Exporting**: jsPDF, DocX
 -   **Containerization**: Docker, Docker Compose
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-### Development Guidelines
-
--   Follow TypeScript and React best practices.
--   Maintain component modularity.
--   Write descriptive and clear commit messages.
--   Thoroughly test changes before submitting.
-
 ## 📄 License
 
 This project is released under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📞 Support
-
-For questions, issues, or suggestions, please:
-
--   Open an issue on GitHub.
--   Check the documentation and existing discussions.
-
 ---
 
 <div align="center">
-  <strong>Built with ❤️ for knowledge workers everywhere.</strong>
-  <br>
   © 2025 Marc'Antonio Lopez. All rights reserved.
 </div>
