@@ -170,7 +170,6 @@ const App: React.FC = () => {
             const pipelineStream = runKnowledgePipeline(
                 combinedInput,
                 topic,
-                false,
                 generateHtmlPreview,
                 modelConfig,
                 settings
