@@ -64,7 +64,7 @@ const App: React.FC = () => {
     const [topic, setTopic] = useState<string>('');
     const [rawText, setRawText] = useState<string>('');
     const [fileContent, setFileContent] = useState<string>('');
-    const [generateDiagrams, setGenerateDiagrams] = useState<boolean>(true);
+
     const [generateHtmlPreview, setGenerateHtmlPreview] = useState<boolean>(true);
     const [modelConfig, setModelConfig] = useState<ModelConfigType>('pro');
     
@@ -95,7 +95,7 @@ const App: React.FC = () => {
     
     const [outputs, setOutputs] = useState<StageOutputs>({
         synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', 
-        diagramGenerator: '', finalizer: '', htmlTranslator: '',
+        finalizer: '', htmlTranslator: '',
     });
 
     const [loadingStage, setLoadingStage] = useState<Stage | null>(null);
@@ -117,7 +117,7 @@ const App: React.FC = () => {
         setFileContent('');
         setOutputs({
             synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', 
-            diagramGenerator: '', finalizer: '', htmlTranslator: '',
+            finalizer: '', htmlTranslator: '',
         });
         setError(null);
         setLoadingStage(null);
@@ -129,7 +129,7 @@ const App: React.FC = () => {
 
     const handleGenerate = useCallback(async () => {
         setError(null);
-        setOutputs({ synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', diagramGenerator: '', finalizer: '', htmlTranslator: '' });
+        setOutputs({ synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', finalizer: '', htmlTranslator: '' });
         setThroughput(0);
 
         const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
@@ -151,7 +151,7 @@ const App: React.FC = () => {
             inputLength: combinedInput.length,
             provider: settings.provider,
             modelConfig,
-            generateDiagrams: generateDiagrams && settings.provider === 'gemini',
+
             generateHtmlPreview
         });
         
@@ -159,18 +159,18 @@ const App: React.FC = () => {
             inputLength: combinedInput.length,
             provider: settings.provider,
             modelConfig,
-            stages: ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'diagramGenerator', 'finalizer', 'htmlTranslator']
+            stages: ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator']
         });
 
         let totalChars = 0;
         const startTime = Date.now();
-        const finalOutputs: StageOutputs = { synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', diagramGenerator: '', finalizer: '', htmlTranslator: '' };
+        const finalOutputs: StageOutputs = { synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', finalizer: '', htmlTranslator: '' };
 
         try {
             const pipelineStream = runKnowledgePipeline(
                 combinedInput,
                 topic,
-                generateDiagrams && settings.provider === 'gemini',
+                false,
                 generateHtmlPreview,
                 modelConfig,
                 settings
@@ -266,7 +266,7 @@ const App: React.FC = () => {
             setError(getFriendlyErrorMessage(err));
             setLoadingStage(null);
         }
-    }, [topic, rawText, fileContent, generateDiagrams, generateHtmlPreview, modelConfig, settings, addHistoryItem]);
+    }, [topic, rawText, fileContent, generateHtmlPreview, modelConfig, settings, addHistoryItem]);
     
     const handleGenerateTitle = useCallback(async () => {
         setError(null);
@@ -519,8 +519,7 @@ const App: React.FC = () => {
                     onGenerateTitle={handleGenerateTitle}
                     isGeneratingTitle={isGeneratingTitle}
                     hasContent={hasContent}
-                    generateDiagrams={generateDiagrams}
-                    setGenerateDiagrams={setGenerateDiagrams}
+
                     generateHtmlPreview={generateHtmlPreview}
                     setGenerateHtmlPreview={setGenerateHtmlPreview}
                     provider={settings.provider}
@@ -537,7 +536,7 @@ const App: React.FC = () => {
                     loadingStage={loadingStage}
                     topic={topic}
                     error={error}
-                    generateDiagrams={generateDiagrams && settings.provider === 'gemini'}
+
                     generateHtmlPreview={generateHtmlPreview}
                     throughput={throughput}
                 />

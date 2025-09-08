@@ -92,7 +92,7 @@ const parseApiError = async (error: unknown, context: { provider?: string; endpo
     return { message, enhancedError };
 };
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 
 const withRetry = async <T>(apiCall: () => Promise<T>, operationName: string, context: { provider?: string; stage?: Stage } = {}): Promise<T> => {
     const MAX_RETRIES = 3;
@@ -452,33 +452,9 @@ async function* generateTextStream(prompt: string, settings: AppSettings, modelC
     }
 }
 
-const createDiagramPrompt = async (mermaidCode: string, modelConfig: ModelConfigType, settings: AppSettings): Promise<string> => {
-    const prompt = `**Role:** You are a "Diagram Describer". Your task is to convert Mermaid.js code into a detailed, descriptive text prompt that an image generation AI can understand.\n**CRITICAL LANGUAGE INSTRUCTION:** Generate the description in English, as this will be used for image generation AI which works best with English prompts.\n**Directives:**\n1. Analyze the provided Mermaid.js code to understand the structure, components, and relationships of the diagram.\n2. Describe the diagram in natural language. Be specific about the shapes, text, arrows, and layout.\n3. The description should be a single, coherent paragraph.\n4. Focus on the visual representation.\n5. The final output should be a prompt that starts with "A diagram of...".\n6. **Strict Output Format:** Your entire response must be *only* the raw text of the prompt. Do not include any conversational text or comments.\n---\nMERMAID CODE TO DESCRIBE:\n\`\`\`mermaid\n${mermaidCode}\n\`\`\``;
-    const text = await generateText(prompt, settings, modelConfig, 0.2);
-    if (typeof text !== 'string' || !text.trim()) {
-        throw new Error('Received an empty response when creating diagram prompt.');
-    }
-    return text.trim();
-};
 
-const generateDiagramImage = async (mermaidCode: string, modelConfig: ModelConfigType, settings: AppSettings): Promise<string> => {
-    const descriptivePrompt = await createDiagramPrompt(mermaidCode, modelConfig, settings);
-    const finalPrompt = `${descriptivePrompt}. Minimalist vector art style. Clean lines, simple shapes, and a light, neutral background. High-contrast, easy-to-read text.`;
-    
-    const apiCall = (): Promise<GenerateImagesResponse> => {
-        const ai = getGeminiClient(settings);
-        return ai.models.generateImages({
-            model: 'imagen-4.0-generate-001',
-            prompt: finalPrompt,
-            config: { numberOfImages: 1, outputMimeType: 'image/jpeg', aspectRatio: '16:9' },
-        });
-    };
-    
-    const response = await withRetry(apiCall, 'generateDiagramImage');
-    const base64ImageBytes = response.generatedImages?.[0]?.image?.imageBytes;
-    if (!base64ImageBytes) throw new Error("Image generation returned no data.");
-    return base64ImageBytes;
-};
+
+
 
 export const generateTitle = async (content: string, modelConfig: ModelConfigType, settings: AppSettings): Promise<string> => {
     if (!content.trim()) throw new Error("Cannot generate a title from empty content.");
@@ -497,7 +473,7 @@ export type PipelineUpdate =
 export async function* runKnowledgePipeline(
     rawInput: string,
     topic: string,
-    generateDiagrams: boolean,
+
     generateHtmlPreview: boolean,
     modelConfig: ModelConfigType,
     settings: AppSettings
@@ -529,35 +505,7 @@ export async function* runKnowledgePipeline(
         }
     }
 
-    if (generateDiagrams) {
-        try {
-            yield { type: 'stage_start', stage: 'diagramGenerator' };
-            const mermaidRegex = /```mermaid\r?\n([\s\S]*?)\r?\n```/g;
-            const parts = currentContent.split(mermaidRegex);
-            if (parts.length > 1) {
-                const mermaidCodes = parts.filter((_, i) => i % 2 === 1);
-                const textParts = parts.filter((_, i) => i % 2 === 0);
-                const base64Images: string[] = [];
 
-                for (const code of mermaidCodes) {
-                    const image = await generateDiagramImage(code, modelConfig, settings);
-                    base64Images.push(image);
-                    if (mermaidCodes.length > 1) await delay(1500);
-                }
-                let result = textParts[0];
-                for (let i = 0; i < base64Images.length; i++) {
-                    result += `![Mermaid Diagram](data:image/jpeg;base64,${base64Images[i]})` + textParts[i + 1];
-                }
-                currentContent = result;
-            }
-            yield { type: 'chunk', stage: 'diagramGenerator', content: currentContent };
-            yield { type: 'stage_end', stage: 'diagramGenerator', fullContent: currentContent };
-        } catch (error) {
-            throw new PipelineError("Error generating diagram images", 'diagramGenerator', error);
-        }
-    } else {
-        yield { type: 'skipped', stage: 'diagramGenerator' };
-    }
 
     if (generateHtmlPreview) {
         try {

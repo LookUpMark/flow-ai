@@ -4,14 +4,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { Stage, StageOutputs, AppError, StageStatus } from '../types';
 import { StageDisplay } from './StageDisplay';
 import { PreviewDisplay } from './PreviewDisplay';
-import { BrainIcon, FilterIcon, WandIcon, ValidatorIcon, ObsidianIcon, EyeIcon, CheckCircleIcon, DiagramIcon, ErrorIcon, SkipIcon } from './Icons';
+import { BrainIcon, FilterIcon, WandIcon, ValidatorIcon, ObsidianIcon, EyeIcon, CheckCircleIcon, ErrorIcon, SkipIcon } from './Icons';
 
 interface OutputPanelProps {
     outputs: StageOutputs;
     loadingStage: Stage | null;
     topic: string;
     error: AppError | null;
-    generateDiagrams: boolean;
+
     generateHtmlPreview: boolean;
     throughput: number;
 }
@@ -22,22 +22,20 @@ const ALL_STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
     { id: 'enhancer', title: 'Enhance', icon: <WandIcon /> },
     { id: 'mermaidValidator', title: 'Validate', icon: <ValidatorIcon /> },
     { id: 'finalizer', title: 'Finalize', icon: <ObsidianIcon /> },
-    { id: 'diagramGenerator', title: 'Diagrams', icon: <DiagramIcon /> },
     { id: 'htmlTranslator', title: 'Preview', icon: <EyeIcon /> },
 ];
 
-const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'diagramGenerator', 'htmlTranslator'];
+const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator'];
 
-export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic, error, generateDiagrams, generateHtmlPreview, throughput }) => {
+export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic, error, generateHtmlPreview, throughput }) => {
     const [activeTab, setActiveTab] = useState<Stage>('synthesizer');
     
     const visibleStages = useMemo(() => {
         return ALL_STAGES.filter(stage => {
-            if (stage.id === 'diagramGenerator' && !generateDiagrams) return false;
             if (stage.id === 'htmlTranslator' && !generateHtmlPreview) return false;
             return true;
         });
-    }, [generateDiagrams, generateHtmlPreview]);
+    }, [generateHtmlPreview]);
 
     const isPipelineRunning = loadingStage !== null;
     const hasPipelineStarted = Object.values(outputs).some(val => val) || isPipelineRunning || !!error;
@@ -86,10 +84,9 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
     const activeStagesCount = useMemo(() => {
         // Base stages that always run
         let count = 5; // synthesizer, condenser, enhancer, mermaidValidator, finalizer
-        if (generateDiagrams) count++;
         if (generateHtmlPreview) count++;
         return count;
-    }, [generateDiagrams, generateHtmlPreview]);
+    }, [generateHtmlPreview]);
 
     const completedPipelineStagesCount = PIPELINE_STAGES.filter(id => stageStatus[id] === 'completed').length;
     const progress = activeStagesCount > 0 ? (completedPipelineStagesCount / activeStagesCount) * 100 : 0;

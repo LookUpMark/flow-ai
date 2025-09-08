@@ -15,8 +15,7 @@ interface InputPanelProps {
     onGenerateTitle: () => void;
     isGeneratingTitle: boolean;
     hasContent: boolean;
-    generateDiagrams: boolean;
-    setGenerateDiagrams: (value: boolean) => void;
+
     generateHtmlPreview: boolean;
     setGenerateHtmlPreview: (value: boolean) => void;
     provider: ApiProvider;
@@ -38,7 +37,7 @@ const GenerateIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 export const InputPanel: React.FC<InputPanelProps> = ({
     topic, setTopic, rawText, setRawText, onFileChange, onGenerate, isLoading, error, setError,
-    onGenerateTitle, isGeneratingTitle, hasContent, generateDiagrams, setGenerateDiagrams,
+    onGenerateTitle, isGeneratingTitle, hasContent,
     generateHtmlPreview, setGenerateHtmlPreview, provider, modelConfig, setModelConfig,
     reasoningModeEnabled, setReasoningModeEnabled, settings, saveSettings, fileInputRef
 }) => {
@@ -63,7 +62,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     };
 
     const canGenerateTitle = hasContent && !isLoading && !isGeneratingTitle;
-    const isDiagramGenerationDisabled = provider !== 'gemini';
+
     const isReasoningModeDisabled = provider === 'ollama';
     
     return (
@@ -199,28 +198,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                         />
                     </button>
                 </div>
-                <div 
-                    className={`flex items-center justify-between bg-muted/30 p-2 rounded-md border border-input transition-opacity ${isDiagramGenerationDisabled ? 'opacity-60' : ''}`}
-                    title={isDiagramGenerationDisabled ? "Diagram generation is only available with the Gemini provider." : ""}
-                >
-                    <label htmlFor="generate-diagrams-toggle" className={`flex items-center flex-grow pr-3 ${isDiagramGenerationDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                        <span className="text-sm font-medium text-foreground">Diagram Images</span>
-                    </label>
-                    <button
-                        type="button"
-                        id="generate-diagrams-toggle"
-                        onClick={() => !isDiagramGenerationDisabled && setGenerateDiagrams(!generateDiagrams)}
-                        className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'bg-primary' : 'bg-muted'} relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-card disabled:cursor-not-allowed`}
-                        role="switch"
-                        aria-checked={generateDiagrams}
-                        disabled={isLoading || isDiagramGenerationDisabled}
-                    >
-                        <span
-                            aria-hidden="true"
-                            className={`${generateDiagrams && !isDiagramGenerationDisabled ? 'translate-x-3' : 'translate-x-0'} pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-                        />
-                    </button>
-                </div>
+
                  <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md border border-input">
                     <label htmlFor="generate-html-toggle" className="flex items-center cursor-pointer flex-grow pr-3">
                         <span className="text-sm font-medium text-foreground">HTML Preview</span>
