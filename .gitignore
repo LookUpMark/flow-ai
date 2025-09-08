@@ -26,3 +26,6 @@ dist-ssr
 # Docker
 docker-compose.override.yml
 .dockerignore
+
+*.md
+!README.md

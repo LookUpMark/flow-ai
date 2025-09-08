@@ -1,5 +1,4 @@
 import { jsPDF } from 'jspdf';
-import type { ExportFormat, Template } from '../types';
 
 const generateSlug = (text: string) => {
     return text
@@ -30,26 +29,4 @@ export const exportPreviewToPdf = async (element: HTMLElement, topic: string) =>
             backgroundColor: '#FFFFFF', // Force a white background for the PDF export
         }
     });
-};
-
-// FIX: Add missing exportDocument function to resolve import error in PreviewModal.
-export const exportDocument = async (format: ExportFormat, template: Template, content: string, topic: string) => {
-    const slug = generateSlug(topic) || 'exported-note';
-    const cleanMarkdown = content.replace(/---[\s\S]*?---/, '').trim();
-
-    if (format === 'markdown') {
-        const blob = new Blob([cleanMarkdown], { type: 'text/markdown;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `${slug}.md`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        return;
-    }
-
-    alert(`Export to ${format} is not yet implemented. Please use the PDF export from the Preview tab.`);
 };

@@ -22,9 +22,9 @@ Whether you're conducting academic research, writing an in-depth article, or sim
 ## ✨ Key Features
 
 - **🔄 Multi-Stage Knowledge Pipeline**: Transform raw content through configurable stages of analysis, synthesis, condensation, and enhancement.
-- **📁 Universal File Support**: Process text files, PDFs, Word documents, and direct text input with a single workflow.
+- **📁 Universal File Support**: Process text files, PDFs, Word documents, PowerPoint presentations, and direct text input with a single workflow.
 - **🧠 Intelligent Analysis**: Leverage state-of-the-art AI models for deep content understanding and contextual relationship mapping.
-- **📊 Flexible Exporting**: Generate polished outputs in PDF, Word (DOCX), and Markdown formats, ready for sharing or archiving.
+- **📊 Flexible Exporting**: Generate polished outputs in PDF and Markdown formats, ready for sharing or archiving.
 - **⚙️ Configurable AI Models**: Full support for different AI providers and model configurations directly from the user interface.
 - **📱 Responsive Design**: A smooth and optimized user experience for both desktop and mobile workflows.
 - **🐳 Dockerized Development Environment**: Quick and consistent setup with Docker for development and deployment.
@@ -42,8 +42,8 @@ Whether you're conducting academic research, writing an in-depth article, or sim
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/LookUpMark/obsidian-knowledge-architect.git
-    cd obsidian-knowledge-architect
+    git clone https://github.com/LookUpMark/flow-ai.git
+    cd flow-ai
     ```
 
 2.  **Configure Environment Variables:**

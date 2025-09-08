@@ -15,6 +15,21 @@ export default defineConfig(({ mode }) => {
       },
       server: {
         host: '0.0.0.0'
+      },
+      optimizeDeps: {
+        include: ['@google/genai', 'docx', 'file-saver', 'jspdf', 'marked'],
+        exclude: []
+      },
+      build: {
+        rollupOptions: {
+          external: [],
+          output: {
+            manualChunks: {
+              'google-genai': ['@google/genai'],
+              'office-utils': ['docx', 'file-saver', 'jspdf']
+            }
+          }
+        }
       }
     };
 });

@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { marked } from 'marked';
-import type { ExportFormat, Template } from '../types';
+import type { Template } from '../types';
 import { TEMPLATES } from '../constants';
-import { exportDocument } from '../services/exportService';
-import { DownloadIcon } from './Icons';
+import { DownloadIcon, ExternalLinkIcon } from './Icons';
 
 interface PreviewModalProps {
     isOpen: boolean;
@@ -13,28 +12,68 @@ interface PreviewModalProps {
     topic: string;
 }
 
-const FORMATS: { id: ExportFormat; name: string }[] = [
-    { id: 'pdf', name: 'PDF' },
-    { id: 'docx', name: 'DOCX' },
-    { id: 'markdown', name: 'Markdown' },
-    { id: 'latex', name: 'LaTeX' },
-];
-
 export const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, onClose, content, topic }) => {
-    const [format, setFormat] = useState<ExportFormat>('pdf');
     const [template, setTemplate] = useState<Template>('default');
-    const [isExporting, setIsExporting] = useState(false);
 
-    const handleExport = async () => {
-        setIsExporting(true);
-        try {
-            await exportDocument(format, template, content, topic);
-        } catch (error) {
-            console.error('Export failed:', error);
-        } finally {
-            setIsExporting(false);
-            onClose();
-        }
+    const handleDownloadHtml = () => {
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${topic}</title>
+                <style>
+                    body {
+                        font-family: ${templateStyle.fontFamily};
+                        font-size: ${templateStyle.fontSize};
+                        line-height: ${templateStyle.lineHeight};
+                        padding: 2rem;
+                    }
+                </style>
+            </head>
+            <body>
+                ${previewHtml}
+            </body>
+            </html>
+        `;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${topic}.html`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleOpenInNewTab = () => {
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${topic}</title>
+                <style>
+                    body {
+                        font-family: ${templateStyle.fontFamily};
+                        font-size: ${templateStyle.fontSize};
+                        line-height: ${templateStyle.lineHeight};
+                        padding: 2rem;
+                    }
+                </style>
+            </head>
+            <body>
+                ${previewHtml}
+            </body>
+            </html>
+        `;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
     };
     
     const templateStyle = useMemo(() => {
@@ -46,8 +85,6 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, onClose, con
         };
     }, [template]);
 
-    const isTemplateSelectionDisabled = format === 'markdown' || format === 'latex';
-    
     const cleanContent = useMemo(() => content.replace(/---[\s\S]*?---/, '').trim(), [content]);
     const previewHtml = useMemo(() => marked.parse(cleanContent), [cleanContent]);
 
@@ -58,7 +95,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, onClose, con
             <div className="modal-backdrop animate-in fade-in-0" onClick={onClose}></div>
             <div className="modal-content bg-card border border-border rounded-lg shadow-2xl w-[90vw] max-w-4xl h-[90vh] flex flex-col animate-in fade-in-0 zoom-in-95">
                 <header className="flex items-center justify-between p-4 border-b border-border">
-                    <h2 className="text-xl font-semibold">Export Preview</h2>
+                    <h2 className="text-xl font-semibold">HTML Preview</h2>
                     <button onClick={onClose} className="p-1 rounded-md hover:bg-accent">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
@@ -68,40 +105,30 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, onClose, con
                     {/* Controls */}
                     <div className="flex flex-col gap-6">
                          <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-muted-foreground">Format</label>
-                            <select
-                                value={format}
-                                onChange={(e) => setFormat(e.target.value as ExportFormat)}
-                                className="h-9 w-full rounded-md border border-input bg-background/50 px-2 py-1 text-sm ring-offset-background placeholder:text-muted-foreground transition-all focus:outline-none focus:ring-2 focus:ring-ring"
-                            >
-                                {FORMATS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                            </select>
-                        </div>
-                        
-                         <div className="flex flex-col gap-2">
-                            <label className={`text-sm font-medium text-muted-foreground transition-opacity ${isTemplateSelectionDisabled ? 'opacity-50' : ''}`}>Template</label>
+                            <label className='text-sm font-medium text-muted-foreground'>Template</label>
                              <select
                                 value={template}
                                 onChange={(e) => setTemplate(e.target.value as Template)}
-                                disabled={isTemplateSelectionDisabled}
-                                className="h-9 w-full rounded-md border border-input bg-background/50 px-2 py-1 text-sm ring-offset-background placeholder:text-muted-foreground transition-all focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="h-9 w-full rounded-md border border-input bg-background/50 px-2 py-1 text-sm ring-offset-background placeholder:text-muted-foreground transition-all focus:outline-none focus:ring-2 focus:ring-ring"
                              >
                                 {Object.entries(TEMPLATES).map(([key, { name }]) => (
                                     <option key={key} value={key}>{name}</option>
                                 ))}
                              </select>
-                             <p className={`text-xs text-muted-foreground transition-opacity ${isTemplateSelectionDisabled ? 'opacity-50' : ''}`}>
-                                 Styling only applies to PDF & DOCX formats.
-                             </p>
                         </div>
 
-                         <div className="mt-auto">
+                         <div className="mt-auto flex flex-col gap-2">
                              <button
-                                onClick={handleExport}
-                                disabled={isExporting}
-                                className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                                onClick={handleDownloadHtml}
+                                className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                             >
-                                {isExporting ? 'Exporting...' : <><DownloadIcon className="w-4 h-4 mr-2"/> Download {FORMATS.find(f=>f.id===format)?.name}</>}
+                                <DownloadIcon className="w-4 h-4 mr-2"/> Download HTML
+                            </button>
+                            <button
+                                onClick={handleOpenInNewTab}
+                                className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors"
+                            >
+                                <ExternalLinkIcon className="w-4 h-4 mr-2"/> Open in New Tab
                             </button>
                          </div>
                     </div>

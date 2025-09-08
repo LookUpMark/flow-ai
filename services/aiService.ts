@@ -5,6 +5,11 @@ import type { Stage, ModelConfigType, AppSettings } from '../types';
 import { errorManager, createApiError, createProcessingError, ERROR_CODES } from './errorService';
 import { loggingService, logApiCall, logPerformanceMetric } from './loggingService';
 
+// Utility function for delays in retry logic
+const delay = (ms: number): Promise<void> => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+};
+
 const getGeminiClient = (settings: AppSettings) => {
     const apiKey = settings.config.gemini.apiKey || process.env.GEMINI_API_KEY;
     if (!apiKey) {
