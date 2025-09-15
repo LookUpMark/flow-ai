@@ -26,7 +26,7 @@ const InputField: React.FC<{ id: string; label: string; value: string; onChange:
 );
 
 const ModelManager: React.FC<{
-    provider: 'openrouter' | 'ollama';
+    provider: 'openrouter' | 'ollama' | 'zai';
     localSettings: AppSettings;
     setLocalSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
 }> = ({ provider, localSettings, setLocalSettings }) => {
@@ -110,7 +110,7 @@ const ModelManager: React.FC<{
                         value={newModel}
                         onChange={e => setNewModel(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddModel(); } }}
-                        placeholder={provider === 'openrouter' ? "e.g., google/gemma-7b-it" : "e.g., llama3:8b"}
+                        placeholder={provider === 'openrouter' ? "e.g., google/gemma-7b-it" : provider === 'zai' ? "e.g., openai/gpt-4o-mini" : "e.g., llama3:8b"}
                         className="flex h-9 w-full rounded-md border border-input bg-background/50 px-3 py-1.5 text-sm"
                     />
                 </div>
@@ -174,6 +174,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                         >
                             <option value="gemini">Google Gemini</option>
                             <option value="openrouter">OpenRouter</option>
+                            <option value="zai">Z.ai</option>
                             <option value="ollama">Ollama (Local)</option>
                         </select>
                     </div>
@@ -209,6 +210,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                                 placeholder="sk-or-..."
                              />
                             <ModelManager provider="openrouter" localSettings={localSettings} setLocalSettings={setLocalSettings} />
+                        </div>
+                    )}
+
+                    {localSettings.provider === 'zai' && (
+                        <div className="space-y-4 animate-in fade-in-0">
+                             <h3 className="font-semibold">Z.ai</h3>
+                             <InputField
+                                id="zai-apikey"
+                                label="Z.ai API Key"
+                                type="password"
+                                value={localSettings.config.zai.apiKey}
+                                onChange={(e) => updateProviderConfig('zai', 'apiKey', e.target.value)}
+                                placeholder="zai-..."
+                             />
+                            <ModelManager provider="zai" localSettings={localSettings} setLocalSettings={setLocalSettings} />
                         </div>
                     )}
 

@@ -341,11 +341,54 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                     throw error;
                 }
             }
+            case 'zai': {
+                const { apiKey, selectedModel: model } = settings.config.zai;
+                if (!apiKey || !model) {
+                    const error = createApiError(
+                        "Z.ai API key and model must be configured in settings.",
+                        undefined,
+                        { provider: 'zai', missingConfig: !apiKey ? 'apiKey' : 'selectedModel' }
+                    );
+                    throw new Error(error.message);
+                }
+
+                try {
+                    const response = await fetch("https://api.z.ai/v1/chat/completions", {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: effectiveTemperature, stream: false })
+                    });
+
+                    if (!response.ok) throw response;
+                    const data = await response.json();
+
+                    loggingService.info('Z.ai API call successful', 'api', 'generation', {
+                        model,
+                        responseLength: data.choices[0]?.message?.content?.length || 0,
+                        temperature: effectiveTemperature,
+                        usage: data.usage
+                    });
+
+                    return data.choices[0].message.content;
+                } catch (error) {
+                    const enhancedError = createApiError(
+                        'Failed to generate text with Z.ai',
+                        error,
+                        {
+                            provider: 'zai',
+                            model,
+                            endpoint: 'chat/completions',
+                            promptLength: prompt.length
+                        }
+                    );
+                    throw error;
+                }
+            }
             default:
                 const error = createApiError(
                     `Unsupported provider: ${settings.provider}`,
                     undefined,
-                    { provider: settings.provider, supportedProviders: ['gemini', 'openrouter', 'ollama'] }
+                    { provider: settings.provider, supportedProviders: ['gemini', 'openrouter', 'ollama', 'zai'] }
                 );
                 throw new Error(error.message);
         }
@@ -447,6 +490,36 @@ async function* generateTextStream(prompt: string, settings: AppSettings, modelC
                         yield parsed.response || '';
                     } catch (e) {
                          console.error("Failed to parse stream chunk:", line);
+                    }
+                }
+            }
+            break;
+        }
+        case 'zai': {
+            const { apiKey, selectedModel: model } = settings.config.zai;
+            if (!apiKey || !model) throw new Error("Z.ai API key and model must be configured in settings.");
+            const response = await fetch("https://api.z.ai/v1/chat/completions", {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: effectiveTemperature, stream: true })
+            });
+            if (!response.ok || !response.body) throw response;
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n').filter(line => line.trim().startsWith('data: '));
+                for (const line of lines) {
+                    const jsonStr = line.replace('data: ', '');
+                    if (jsonStr === '[DONE]') continue;
+                    try {
+                        const parsed = JSON.parse(jsonStr);
+                        yield parsed.choices[0]?.delta?.content || '';
+                    } catch (e) {
+                        console.error("Failed to parse stream chunk:", jsonStr);
                     }
                 }
             }

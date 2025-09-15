@@ -104,7 +104,7 @@ export type StageStatus = 'completed' | 'running' | 'pending' | 'failed' | 'skip
 export type ModelConfigType = 'flash' | 'pro';
 
 // Defines the available API providers for the AI service.
-export type ApiProvider = 'gemini' | 'openrouter' | 'ollama';
+export type ApiProvider = 'gemini' | 'openrouter' | 'ollama' | 'zai';
 
 // Defines the configuration structure for each API provider.
 export interface ProviderSettings {
@@ -118,6 +118,11 @@ export interface ProviderSettings {
     };
     ollama: {
         baseUrl: string;
+        models: string[];
+        selectedModel: string;
+    };
+    zai: {
+        apiKey: string;
         models: string[];
         selectedModel: string;
     };
