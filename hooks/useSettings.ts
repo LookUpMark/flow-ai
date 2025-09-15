@@ -19,8 +19,6 @@ const DEFAULTS: AppSettings = {
         },
         zai: {
             apiKey: '',
-            models: ['openai/gpt-4o-mini', 'openai/gpt-4o'],
-            selectedModel: 'openai/gpt-4o-mini',
         },
     },
     reasoningModeEnabled: true,
@@ -58,8 +56,7 @@ export const useSettings = (): [AppSettings, (settings: AppSettings) => void] =>
                         ...(parsed.config || {}),
                         openrouter: { ...DEFAULTS.config.openrouter, ...(parsed.config?.openrouter || {}) },
                         ollama: { ...DEFAULTS.config.ollama, ...(parsed.config?.ollama || {}) },
-                        zai: { ...DEFAULTS.config.zai, ...(parsed.config?.zai || {}) },
-                    },
+                      },
                 };
             }
         } catch (error) {

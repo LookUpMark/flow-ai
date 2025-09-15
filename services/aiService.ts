@@ -342,17 +342,18 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                 }
             }
             case 'zai': {
-                const { apiKey, selectedModel: model } = settings.config.zai;
-                if (!apiKey || !model) {
+                const apiKey = settings.config.zai.apiKey;
+                if (!apiKey) {
                     const error = createApiError(
-                        "Z.ai API key and model must be configured in settings.",
+                        "Z.ai API key is not configured. Please set it in the application settings.",
                         undefined,
-                        { provider: 'zai', missingConfig: !apiKey ? 'apiKey' : 'selectedModel' }
+                        { provider: 'zai', configPath: 'config.zai.apiKey' }
                     );
                     throw new Error(error.message);
                 }
 
                 try {
+                    const model = 'gpt-4o'; // Fixed model for Z.ai
                     const response = await fetch("https://api.z.ai/v1/chat/completions", {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -376,7 +377,7 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                         error,
                         {
                             provider: 'zai',
-                            model,
+                            model: 'gpt-4o',
                             endpoint: 'chat/completions',
                             promptLength: prompt.length
                         }
@@ -496,8 +497,9 @@ async function* generateTextStream(prompt: string, settings: AppSettings, modelC
             break;
         }
         case 'zai': {
-            const { apiKey, selectedModel: model } = settings.config.zai;
-            if (!apiKey || !model) throw new Error("Z.ai API key and model must be configured in settings.");
+            const apiKey = settings.config.zai.apiKey;
+            if (!apiKey) throw new Error("Z.ai API key is not configured. Please set it in the application settings.");
+            const model = 'gpt-4o'; // Fixed model for Z.ai
             const response = await fetch("https://api.z.ai/v1/chat/completions", {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },

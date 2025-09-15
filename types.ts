@@ -123,8 +123,6 @@ export interface ProviderSettings {
     };
     zai: {
         apiKey: string;
-        models: string[];
-        selectedModel: string;
     };
 }
 
