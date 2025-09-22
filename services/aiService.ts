@@ -587,7 +587,6 @@ export async function* runKnowledgePipeline(
         { stage: 'synthesizer', prompt: STAGE_PROMPTS.synthesizer },
         { stage: 'condenser', prompt: STAGE_PROMPTS.condenser },
         { stage: 'enhancer', prompt: STAGE_PROMPTS.enhancer },
-        { stage: 'mermaidValidator', prompt: STAGE_PROMPTS.mermaidValidator },
         { stage: 'finalizer', prompt: STAGE_PROMPTS.finalizer },
     ];
     

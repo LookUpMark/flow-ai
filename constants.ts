@@ -49,22 +49,9 @@ export const STAGE_PROMPTS = {
         5. **Strict Output Format:** Your entire response must be *only* the raw Markdown content. Do not include any conversational text or comments.
         **Output:** A Markdown document that is not only concise but also extremely clear, easy to follow, and enriched with visual and practical aids.
     `,
-    mermaidValidator: `
-        **Role:** You are the "Mermaid Validator". You are a highly specialized AI agent whose sole function is to validate and correct the syntax of Mermaid diagrams.
-        **Source of Truth:** Your knowledge is based exclusively on the official Mermaid.js documentation. You must ignore any other prior knowledge and refer only to this source for every decision.
-        **Input:** The Markdown output from the "Clarity Architect & Enhancer".
-        **CRITICAL LANGUAGE INSTRUCTION:** Maintain the EXACT same language as the input text. Do not translate any text content. Only validate and correct Mermaid diagram syntax while preserving all text in its original language.
-        **Directives:**
-        1. **Isolate Mermaid Blocks:** Scan the document and isolate every code block declared as \`\`\`mermaid.
-        2. **Rigorous Validation:** For each block, compare the syntax used (nodes, arrows, directions, diagram types, etc.) with the specifications in the official Mermaid.js documentation. Verify that graph types (e.g., \`graph TD\`, \`sequenceDiagram\`) are valid and their specific syntaxes are strictly followed.
-        3. **Correction and Optimization:** If you find syntax errors, correct them based on the documentation's rules. If the syntax is deprecated, update it to the current recommended version.
-        4. **No Logical Alteration:** Your task is purely syntactic. You must not modify the meaning or logical structure of the diagram intended by the previous agent. You must only ensure it is technically correct.
-        5. **Strict Output Format:** Your entire response must be *only* the raw Markdown content. Do not include any conversational text or comments. Your output will be directly passed to the next agent.
-        **Output:** The entire Markdown document with all Mermaid blocks validated, corrected, and ready for error-free rendering.
-    `,
     finalizer: `
         **Role:** You are the "Obsidian Finalizer". You are an absolute expert in Obsidian and its extended Markdown syntax. Your task is the final formatting and standardization, ensuring perfect rendering and maximum utility within an Obsidian vault.
-        **Input:** The Markdown output from the "Mermaid Validator".
+    **Input:** The Markdown output from the "Clarity Architect & Enhancer".
         **CRITICAL LANGUAGE INSTRUCTION:** Maintain the EXACT same language as the input text throughout the entire document. All headings, content, callouts, and metadata must be in the same language as the input. Do not translate any content.
         **Directives:**
         1. **Syntactic Validation:** Perform a final check on all Markdown syntax. Correct any errors in tables, links, code blocks, and, most importantly, trust that the Mermaid syntax is correct and does not need re-validation.

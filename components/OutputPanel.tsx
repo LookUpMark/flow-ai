@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { Stage, StageOutputs, AppError, StageStatus } from '../types';
 import { StageDisplay } from './StageDisplay';
 import { PreviewDisplay } from './PreviewDisplay';
-import { BrainIcon, FilterIcon, WandIcon, ValidatorIcon, ObsidianIcon, EyeIcon, CheckCircleIcon, ErrorIcon, SkipIcon } from './Icons';
+import { BrainIcon, FilterIcon, WandIcon, ObsidianIcon, EyeIcon, CheckCircleIcon, ErrorIcon, SkipIcon } from './Icons';
 
 interface OutputPanelProps {
     outputs: StageOutputs;
@@ -21,12 +21,11 @@ const ALL_STAGES: { id: Stage; title: string; icon: React.ReactNode }[] = [
     { id: 'synthesizer', title: 'Synthesize', icon: <BrainIcon /> },
     { id: 'condenser', title: 'Condense', icon: <FilterIcon /> },
     { id: 'enhancer', title: 'Enhance', icon: <WandIcon /> },
-    { id: 'mermaidValidator', title: 'Validate', icon: <ValidatorIcon /> },
     { id: 'finalizer', title: 'Finalize', icon: <ObsidianIcon /> },
     { id: 'htmlTranslator', title: 'Preview', icon: <EyeIcon /> },
 ];
 
-const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator'];
+const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'finalizer', 'htmlTranslator'];
 
 export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic, error, initialInput, generateHtmlPreview, throughput }) => {
     const [activeTab, setActiveTab] = useState<Stage>('synthesizer');
@@ -84,7 +83,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
 
     const activeStagesCount = useMemo(() => {
         // Base stages that always run
-        let count = 5; // synthesizer, condenser, enhancer, mermaidValidator, finalizer
+        let count = 4; // synthesizer, condenser, enhancer, finalizer
         if (generateHtmlPreview) count++;
         return count;
     }, [generateHtmlPreview]);
@@ -119,10 +118,8 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
                 return outputs.synthesizer || '';
             case 'enhancer':
                 return outputs.condenser || '';
-            case 'mermaidValidator':
-                return outputs.enhancer || '';
             case 'finalizer':
-                return outputs.mermaidValidator || '';
+                return outputs.enhancer || '';
             case 'htmlTranslator':
                 return outputs.finalizer || '';
         }

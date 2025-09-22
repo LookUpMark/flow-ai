@@ -95,7 +95,7 @@ const App: React.FC = () => {
     }, []);
     
     const [outputs, setOutputs] = useState<StageOutputs>({
-        synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', 
+        synthesizer: '', condenser: '', enhancer: '', 
         finalizer: '', htmlTranslator: '',
     });
     const [initialInput, setInitialInput] = useState<string>('');
@@ -118,7 +118,7 @@ const App: React.FC = () => {
         setRawText('');
         setFileContent('');
         setOutputs({
-            synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', 
+            synthesizer: '', condenser: '', enhancer: '', 
             finalizer: '', htmlTranslator: '',
         });
         setInitialInput('');
@@ -132,7 +132,7 @@ const App: React.FC = () => {
 
     const handleGenerate = useCallback(async () => {
     setError(null);
-    setOutputs({ synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', finalizer: '', htmlTranslator: '' });
+    setOutputs({ synthesizer: '', condenser: '', enhancer: '', finalizer: '', htmlTranslator: '' });
     setThroughput(0);
 
     const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
@@ -163,12 +163,12 @@ const App: React.FC = () => {
             inputLength: combinedInput.length,
             provider: settings.provider,
             modelConfig,
-                stages: ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator']
+                stages: ['synthesizer', 'condenser', 'enhancer', 'finalizer', 'htmlTranslator']
         });
 
         let totalChars = 0;
         const startTime = Date.now();
-        const finalOutputs: StageOutputs = { synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', finalizer: '', htmlTranslator: '' };
+    const finalOutputs: StageOutputs = { synthesizer: '', condenser: '', enhancer: '', finalizer: '', htmlTranslator: '' };
 
         try {
             const pipelineStream = runKnowledgePipeline(
