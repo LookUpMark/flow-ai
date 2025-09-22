@@ -97,6 +97,7 @@ const App: React.FC = () => {
         synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', 
         finalizer: '', htmlTranslator: '',
     });
+    const [initialInput, setInitialInput] = useState<string>('');
 
     const [loadingStage, setLoadingStage] = useState<Stage | null>(null);
     const [error, setError] = useState<AppError | null>(null);
@@ -119,6 +120,7 @@ const App: React.FC = () => {
             synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', 
             finalizer: '', htmlTranslator: '',
         });
+        setInitialInput('');
         setError(null);
         setLoadingStage(null);
         setThroughput(0);
@@ -128,11 +130,12 @@ const App: React.FC = () => {
     }, []);
 
     const handleGenerate = useCallback(async () => {
-        setError(null);
-        setOutputs({ synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', finalizer: '', htmlTranslator: '' });
-        setThroughput(0);
+    setError(null);
+    setOutputs({ synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', finalizer: '', htmlTranslator: '' });
+    setThroughput(0);
 
-        const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
+    const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
+    setInitialInput(combinedInput);
         if (!topic.trim() || !combinedInput.trim()) {
             const validationError = createValidationError(
                 'Please provide a topic and some input text or a file.',
@@ -159,7 +162,7 @@ const App: React.FC = () => {
             inputLength: combinedInput.length,
             provider: settings.provider,
             modelConfig,
-            stages: ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator']
+                stages: ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator']
         });
 
         let totalChars = 0;
@@ -535,6 +538,7 @@ const App: React.FC = () => {
                     loadingStage={loadingStage}
                     topic={topic}
                     error={error}
+                    initialInput={initialInput}
 
                     generateHtmlPreview={generateHtmlPreview}
                     throughput={throughput}

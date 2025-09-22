@@ -1,6 +1,6 @@
 
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { Stage, StageOutputs, AppError, StageStatus } from '../types';
 import { StageDisplay } from './StageDisplay';
 import { PreviewDisplay } from './PreviewDisplay';
@@ -11,12 +11,13 @@ interface OutputPanelProps {
     loadingStage: Stage | null;
     topic: string;
     error: AppError | null;
+    initialInput: string;
 
     generateHtmlPreview: boolean;
     throughput: number;
 }
 
-const ALL_STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
+const ALL_STAGES: { id: Stage; title: string; icon: React.ReactNode }[] = [
     { id: 'synthesizer', title: 'Synthesize', icon: <BrainIcon /> },
     { id: 'condenser', title: 'Condense', icon: <FilterIcon /> },
     { id: 'enhancer', title: 'Enhance', icon: <WandIcon /> },
@@ -27,7 +28,7 @@ const ALL_STAGES: { id: Stage; title: string; icon: JSX.Element }[] = [
 
 const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator'];
 
-export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic, error, generateHtmlPreview, throughput }) => {
+export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic, error, initialInput, generateHtmlPreview, throughput }) => {
     const [activeTab, setActiveTab] = useState<Stage>('synthesizer');
     
     const visibleStages = useMemo(() => {
@@ -110,6 +111,23 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
         return `${base} hover:bg-accent/50 hover:text-accent-foreground`;
     };
 
+    const getStageInput = (stage: Stage): string => {
+        switch (stage) {
+            case 'synthesizer':
+                return initialInput || '';
+            case 'condenser':
+                return outputs.synthesizer || '';
+            case 'enhancer':
+                return outputs.condenser || '';
+            case 'mermaidValidator':
+                return outputs.enhancer || '';
+            case 'finalizer':
+                return outputs.mermaidValidator || '';
+            case 'htmlTranslator':
+                return outputs.finalizer || '';
+        }
+    };
+
     return (
         <div className="bg-card text-card-foreground border rounded-lg p-2 flex flex-col shadow-lg shadow-black/20">
             <h2 className="text-lg font-semibold text-foreground mb-2">2. View Output</h2>
@@ -159,31 +177,51 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
             </div>
 
             <div className="flex-grow bg-background/50 rounded-md p-3 min-h-[16rem] relative border border-input overflow-hidden">
-                <div className={`absolute inset-0 transition-opacity duration-300 ease-in-out flex flex-col items-center justify-center h-full text-center text-muted-foreground ${!hasPipelineStarted ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                    <div className="w-16 h-16 mb-4 opacity-50">{ALL_STAGES[0].icon}</div>
-                    <h3 className="text-lg font-semibold">Your generated note will appear here.</h3>
-                    <p>Fill in the input fields and click "Generate" to start the process.</p>
-                </div>
+                {!hasPipelineStarted && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                        <h3 className="text-lg font-semibold">Your generated note will appear here.</h3>
+                        <p>Fill in the input fields and click \"Generate\" to start the process.</p>
+                    </div>
+                )}
                  
                 {ALL_STAGES.map(({ id, title }) => (
                      <div key={id} className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${activeTab === id ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                        <div className="h-full w-full">
-                           {id === 'htmlTranslator' ? (
-                                <PreviewDisplay
-                                    htmlContent={outputs.htmlTranslator}
-                                    topic={topic}
-                                />
-                            ) : (
-                                <StageDisplay
-                                    title={`${title} Stage Output`}
-                                    content={outputs[id as Exclude<Stage, 'htmlTranslator'>]}
-                                    isLoading={loadingStage === id}
-                                    isFinalizer={id === 'finalizer'}
-                                    hasPipelineStarted={hasPipelineStarted}
-                                    isFailed={error?.context === id}
-                                    errorMessage={error?.context === id ? error.message : undefined}
-                                />
-                            )}
+                        <div className="h-full w-full flex flex-col">
+                            <div className="flex-1 min-h-[8rem] bg-background rounded-t-md border border-input overflow-hidden">
+                                <div className="px-3 py-2 border-b border-input text-xs uppercase tracking-wide text-muted-foreground">Stage Input</div>
+                                <div className="h-[calc(100%-2rem)] p-2 overflow-auto">
+                                    <pre className="w-full h-full whitespace-pre-wrap break-words text-sm text-foreground/80 font-mono">
+                                        <code>
+                                            {getStageInput(id) || (hasPipelineStarted ? 'Input unavailable' : '')}
+                                        </code>
+                                    </pre>
+                                </div>
+                            </div>
+                            <div className="flex-[1.5] min-h-[10rem] bg-background rounded-b-md border border-input border-t-0 overflow-hidden">
+                                <div className="px-3 py-2 border-b border-input text-xs uppercase tracking-wide text-muted-foreground">Stage Output</div>
+                                <div className="h-[calc(100%-2rem)] p-2 overflow-hidden">
+                                    {id === 'htmlTranslator' ? (
+                                        <div className="h-full">
+                                            <PreviewDisplay
+                                                htmlContent={outputs.htmlTranslator}
+                                                topic={topic}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="h-full">
+                                            <StageDisplay
+                                                title={`${title} Stage Output`}
+                                                content={outputs[id as Exclude<Stage, 'htmlTranslator'>]}
+                                                isLoading={loadingStage === id}
+                                                isFinalizer={id === 'finalizer'}
+                                                hasPipelineStarted={hasPipelineStarted}
+                                                isFailed={error?.context === id}
+                                                errorMessage={error?.context === id ? error.message : undefined}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 ))}
