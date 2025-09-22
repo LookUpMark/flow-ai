@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { runKnowledgePipeline, generateTitle, PipelineError } from './services/aiService';
-import type { Stage, StageOutputs, AppError, ModelConfigType, EnhancedError } from './types';
+import type { Stage, StageOutputs, AppError, ModelConfigType, EnhancedError, OutputLanguage } from './types';
 import { useSettings } from './hooks/useSettings';
 import { useHistory } from './hooks/useHistory';
 import { InputPanel } from './components/InputPanel';
@@ -67,6 +67,7 @@ const App: React.FC = () => {
 
     const [generateHtmlPreview, setGenerateHtmlPreview] = useState<boolean>(true);
     const [modelConfig, setModelConfig] = useState<ModelConfigType>('pro');
+    const [outputLanguage, setOutputLanguage] = useState<OutputLanguage>('auto');
     
     // Setup error handling and logging
     useEffect(() => {
@@ -173,6 +174,7 @@ const App: React.FC = () => {
             const pipelineStream = runKnowledgePipeline(
                 combinedInput,
                 topic,
+                outputLanguage,
                 generateHtmlPreview,
                 modelConfig,
                 settings
@@ -300,7 +302,7 @@ const App: React.FC = () => {
 
         setIsGeneratingTitle(true);
         try {
-            const newTitle = await generateTitle(combinedInput, modelConfig, settings);
+            const newTitle = await generateTitle(combinedInput, modelConfig, settings, outputLanguage);
             setTopic(newTitle);
             
             loggingService.endPerformanceTracking(titleGenerationId, {
@@ -532,6 +534,8 @@ const App: React.FC = () => {
                     settings={settings}
                     saveSettings={saveSettings}
                     fileInputRef={fileInputRef}
+                    outputLanguage={outputLanguage}
+                    setOutputLanguage={setOutputLanguage}
                 />
                 <OutputPanel
                     outputs={outputs}

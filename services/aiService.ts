@@ -1,7 +1,7 @@
 // FIX: Import GenerateImagesResponse to correctly type the response from the image generation API.
 import { GoogleGenAI, GenerateImagesResponse } from "@google/genai";
 import { STAGE_PROMPTS } from '../constants';
-import type { Stage, ModelConfigType, AppSettings } from '../types';
+import type { Stage, ModelConfigType, AppSettings, OutputLanguage } from '../types';
 import { errorManager, createApiError, createProcessingError, ERROR_CODES } from './errorService';
 import { loggingService, logApiCall, logPerformanceMetric } from './loggingService';
 
@@ -536,9 +536,20 @@ async function* generateTextStream(prompt: string, settings: AppSettings, modelC
 
 
 
-export const generateTitle = async (content: string, modelConfig: ModelConfigType, settings: AppSettings): Promise<string> => {
+export const generateTitle = async (content: string, modelConfig: ModelConfigType, settings: AppSettings, outputLanguage: OutputLanguage = 'auto'): Promise<string> => {
     if (!content.trim()) throw new Error("Cannot generate a title from empty content.");
-    const prompt = `**Role:** You are a "Title Architect". Your task is to create a clear, concise, and descriptive title for a knowledge base note.\n**Input:** A body of raw text.\n**CRITICAL LANGUAGE INSTRUCTION:** Detect the primary language of the input content and generate the title in that EXACT same language. If the input is in Italian, create an Italian title. If in English, create an English title. If in Spanish, create a Spanish title, etc. Maintain absolute linguistic consistency.\n**Directives:**\n1. Analyze the provided text to understand its main subject and key concepts.\n2. Generate a title that accurately summarizes the content.\n3. The title should be suitable for a system like Obsidian or a personal knowledge base.\n4. **Strict Output Format:** Your entire response must be *only* the raw text of the title.\n---\nTEXT TO ANALYZE:\n\`\`\`\n${content}\n\`\`\``;
+    const languageNames: Record<Exclude<OutputLanguage, 'auto'>, string> = {
+        it: 'Italian',
+        en: 'English',
+        es: 'Spanish',
+        fr: 'French',
+        de: 'German',
+        pt: 'Portuguese',
+    };
+    const langDirective = outputLanguage === 'auto'
+        ? 'Detect the primary language of the input content and generate the title in that EXACT same language.'
+        : `LANGUAGE OVERRIDE (Highest Priority): You MUST produce the title strictly in ${languageNames[outputLanguage]}. If the input language differs, translate faithfully to ${languageNames[outputLanguage]}. Preserve technical terms, code, identifiers, and proper nouns when appropriate.`;
+    const prompt = `**Role:** You are a "Title Architect". Your task is to create a clear, concise, and descriptive title for a knowledge base note.\n**Input:** A body of raw text.\n**CRITICAL LANGUAGE INSTRUCTION:** ${langDirective}\n**Directives:**\n1. Analyze the provided text to understand its main subject and key concepts.\n2. Generate a title that accurately summarizes the content.\n3. The title should be suitable for a system like Obsidian or a personal knowledge base.\n4. **Strict Output Format:** Your entire response must be *only* the raw text of the title.\n---\nTEXT TO ANALYZE:\n\`\`\`\n${content}\n\`\`\``;
     const text = await generateText(prompt, settings, modelConfig, 0.4);
     if (typeof text !== 'string' || !text.trim()) throw new Error('Received an empty or invalid response from the API.');
     return text.trim();
@@ -553,12 +564,25 @@ export type PipelineUpdate =
 export async function* runKnowledgePipeline(
     rawInput: string,
     topic: string,
-
+    outputLanguage: OutputLanguage,
     generateHtmlPreview: boolean,
     modelConfig: ModelConfigType,
     settings: AppSettings
 ): AsyncGenerator<PipelineUpdate> {
     let currentContent = rawInput;
+    const languageNames: Record<Exclude<OutputLanguage, 'auto'>, string> = {
+        it: 'Italian',
+        en: 'English',
+        es: 'Spanish',
+        fr: 'French',
+        de: 'German',
+        pt: 'Portuguese',
+    };
+    const getLanguageDirective = (): string => {
+        if (outputLanguage === 'auto') return '';
+        const langName = languageNames[outputLanguage];
+        return `LANGUAGE OVERRIDE (Highest Priority): You MUST produce your entire output strictly in ${langName}. If the input language differs, translate faithfully to ${langName} while preserving technical terms, code, identifiers, and proper nouns in their original form when appropriate. This directive supersedes any other language instruction (e.g., 'maintain same language').`;
+    };
     const pipelineStages: { stage: Stage; prompt: string }[] = [
         { stage: 'synthesizer', prompt: STAGE_PROMPTS.synthesizer },
         { stage: 'condenser', prompt: STAGE_PROMPTS.condenser },
@@ -571,7 +595,8 @@ export async function* runKnowledgePipeline(
         try {
             yield { type: 'stage_start', stage };
             let stageOutput = '';
-            const fullPrompt = `CONTEXT TOPIC: "${topic}"\n---\n${prompt}\n---\nPREVIOUS STAGE CONTENT TO PROCESS:\n\`\`\`markdown\n${currentContent}\n\`\`\``;
+            const langDirective = getLanguageDirective();
+            const fullPrompt = `${langDirective ? langDirective + "\n---\n" : ''}CONTEXT TOPIC: "${topic}"\n---\n${prompt}\n---\nPREVIOUS STAGE CONTENT TO PROCESS:\n\`\`\`markdown\n${currentContent}\n\`\`\``;
             const stream = generateTextStream(fullPrompt, settings, modelConfig, 0.6);
             for await (const chunk of stream) {
                 const sanitizedChunk = chunk.replace(/^```(markdown|html)\s*|```\s*$/g, '');
@@ -591,6 +616,7 @@ export async function* runKnowledgePipeline(
         try {
             yield { type: 'stage_start', stage: 'htmlTranslator' };
             let htmlOutput = '';
+            // For HTML translator, preserve the language of the finalized markdown; do not force translation here.
             const fullPrompt = `CONTEXT TOPIC: "${topic}"\n---\n${STAGE_PROMPTS.htmlTranslator}\n---\nPREVIOUS STAGE CONTENT TO PROCESS:\n\`\`\`markdown\n${currentContent}\n\`\`\``;
             const stream = generateTextStream(fullPrompt, settings, modelConfig, 0.2);
             for await (const chunk of stream) {

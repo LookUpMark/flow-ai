@@ -132,3 +132,6 @@ export interface AppSettings {
     config: ProviderSettings;
     reasoningModeEnabled: boolean;
 }
+
+// Supported output languages for generated text
+export type OutputLanguage = 'auto' | 'it' | 'en' | 'es' | 'fr' | 'de' | 'pt';

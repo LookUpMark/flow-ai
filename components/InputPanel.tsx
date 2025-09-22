@@ -1,6 +1,6 @@
 import React from 'react';
 import { SparklesIcon, AlertTriangleIcon } from './Icons';
-import type { AppError, ModelConfigType, ApiProvider, AppSettings } from '../types';
+import type { AppError, ModelConfigType, ApiProvider, AppSettings, OutputLanguage } from '../types';
 
 interface InputPanelProps {
     topic: string;
@@ -26,6 +26,8 @@ interface InputPanelProps {
     settings: AppSettings;
     saveSettings: (settings: AppSettings) => void;
     fileInputRef: React.RefObject<HTMLInputElement>;
+    outputLanguage: OutputLanguage;
+    setOutputLanguage: (lang: OutputLanguage) => void;
 }
 
 const GenerateIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -39,7 +41,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     topic, setTopic, rawText, setRawText, onFileChange, onGenerate, isLoading, error, setError,
     onGenerateTitle, isGeneratingTitle, hasContent,
     generateHtmlPreview, setGenerateHtmlPreview, provider, modelConfig, setModelConfig,
-    reasoningModeEnabled, setReasoningModeEnabled, settings, saveSettings, fileInputRef
+    reasoningModeEnabled, setReasoningModeEnabled, settings, saveSettings, fileInputRef,
+    outputLanguage, setOutputLanguage
 }) => {
 
     const handleClearError = () => {
@@ -137,6 +140,24 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             </div>
 
             <div className="space-y-2">
+                <div className="flex flex-col gap-1.5 bg-muted/30 p-2.5 rounded-lg border border-input">
+                    <label htmlFor="output-language-select" className="font-medium text-foreground">Output Language</label>
+                    <select
+                        id="output-language-select"
+                        value={outputLanguage}
+                        onChange={(e) => setOutputLanguage(e.target.value as OutputLanguage)}
+                        disabled={isLoading}
+                        className="h-10 w-full rounded-md border border-input bg-background/80 pl-3 pr-10 py-2 text-sm ring-offset-background placeholder:text-muted-foreground transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:border-primary disabled:opacity-50"
+                    >
+                        <option value="auto">Auto-detect (default)</option>
+                        <option value="it">Italiano</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="pt">Português</option>
+                    </select>
+                </div>
                  {provider === 'gemini' && (
                     <div className="flex flex-col gap-1.5 bg-muted/30 p-2.5 rounded-lg border border-input">
                         <label htmlFor="model-select" className="font-medium text-foreground">Model Selection</label>
