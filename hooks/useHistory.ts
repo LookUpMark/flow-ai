@@ -11,6 +11,20 @@ export interface HistoryItem {
 
 const HISTORY_KEY = 'flowai-history';
 
+// Utility function to generate UUID with fallback for older browsers
+const generateUUID = (): string => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    
+    // Fallback UUID generation for older browsers or insecure contexts
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+};
+
 export const useHistory = () => {
     const [history, setHistory] = useState<HistoryItem[]>(() => {
         try {
@@ -36,7 +50,7 @@ export const useHistory = () => {
     const addHistoryItem = useCallback((topic: string, outputs: StageOutputs) => {
         setHistory(prevHistory => {
             const newItem: HistoryItem = {
-                id: crypto.randomUUID(),
+                id: generateUUID(),
                 topic,
                 outputs,
                 date: new Date().toISOString(),
