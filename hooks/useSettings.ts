@@ -9,8 +9,8 @@ const DEFAULTS: AppSettings = {
         },
         openrouter: {
             apiKey: '',
-            models: ['deepseek/deepseek-chat-v3.1:free', 'mistralai/mistral-7b-instruct'],
-            selectedModel: 'deepseek/deepseek-chat-v3.1:free',
+            models: ['deepseek/deepseek-chat-v3-0324:free', 'deepseek/deepseek-r1-0528-qwen3-8b:free', 'deepseek/deepseek-r1-0528:free', 'z-ai/glm-4.5-air:free'],
+            selectedModel: 'deepseek/deepseek-chat-v3-0324:free',
         },
         ollama: {
             baseUrl: 'http://localhost:11434',

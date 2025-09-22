@@ -23,10 +23,55 @@ export const StageDisplay: React.FC<StageDisplayProps> = ({ title, content, isLo
         }
     }, [content]);
 
-    const handleCopy = () => {
-        if (content) {
-            navigator.clipboard.writeText(content);
-            setCopied(true);
+    const handleCopy = async () => {
+        if (!content) return;
+        
+        try {
+            // Try modern clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(content);
+                setCopied(true);
+            } else {
+                // Fallback to legacy method
+                const textArea = document.createElement('textarea');
+                textArea.value = content;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    setCopied(true);
+                } catch (fallbackError) {
+                    console.error('Fallback copy failed:', fallbackError);
+                    // Could add a notification here
+                } finally {
+                    document.body.removeChild(textArea);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to copy text:', error);
+            // Still try fallback method
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = content;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                document.execCommand('copy');
+                setCopied(true);
+                document.body.removeChild(textArea);
+            } catch (fallbackError) {
+                console.error('All copy methods failed:', fallbackError);
+                // Could add a notification here
+            }
         }
     };
 
