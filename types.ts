@@ -103,7 +103,7 @@ export type StageStatus = 'completed' | 'running' | 'pending' | 'failed' | 'skip
 export type ModelConfigType = 'flash' | 'pro';
 
 // Defines the available API providers for the AI service.
-export type ApiProvider = 'gemini' | 'openrouter' | 'ollama' | 'zai';
+export type ApiProvider = 'gemini' | 'openrouter' | 'ollama' | 'zai' | 'lmstudio';
 
 // Defines the configuration structure for each API provider.
 export interface ProviderSettings {
@@ -122,6 +122,11 @@ export interface ProviderSettings {
     };
     zai: {
         apiKey: string;
+    };
+    lmstudio: {
+        baseUrl: string;
+        models: string[];
+        selectedModel: string;
     };
 }
 

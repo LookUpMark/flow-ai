@@ -14,7 +14,16 @@ export default defineConfig(({ mode }) => {
         }
       },
       server: {
-        host: '0.0.0.0'
+        host: '0.0.0.0',
+        port: 3000,  // Cambiato a 3000 per compatibilità con LMStudio
+        proxy: {
+          // Proxy per LMStudio API per evitare problemi CORS in sviluppo
+          '/api/v0': {
+            target: 'http://localhost:1234',
+            changeOrigin: true,
+            secure: false
+          }
+        }
       },
       optimizeDeps: {
         include: ['@google/genai', 'docx', 'file-saver', 'jspdf', 'marked'],

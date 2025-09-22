@@ -5,6 +5,15 @@ import type { Stage, ModelConfigType, AppSettings, OutputLanguage } from '../typ
 import { errorManager, createApiError, createProcessingError, ERROR_CODES } from './errorService';
 import { loggingService, logApiCall, logPerformanceMetric } from './loggingService';
 
+// Helper function to get the correct base URL for API calls (proxy-aware in development)
+const getApiBaseUrl = (configuredBaseUrl: string): string => {
+    // In development, use proxy to avoid CORS issues
+    if (process.env.NODE_ENV === 'development' && configuredBaseUrl.includes('localhost:1234')) {
+        return ''; // Use relative URLs which will be proxied by Vite
+    }
+    return configuredBaseUrl.replace(/\/$/, ''); // Remove trailing slash
+};
+
 // Utility function for delays in retry logic
 const delay = (ms: number): Promise<void> => {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -385,11 +394,158 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                     throw error;
                 }
             }
+            case 'lmstudio': {
+                const { baseUrl, selectedModel: model } = settings.config.lmstudio;
+                if (!baseUrl || !model) {
+                    const error = createApiError(
+                        "LMStudio Base URL and model must be configured in settings.",
+                        undefined,
+                        { provider: 'lmstudio', missingConfig: !baseUrl ? 'baseUrl' : 'selectedModel' }
+                    );
+                    throw new Error(error.message);
+                }
+                
+                try {
+                    // Get the correct API base URL (proxy-aware in development)
+                    const apiBaseUrl = getApiBaseUrl(baseUrl);
+                    
+                    // Use native API only (provides better stats and native functionality)
+                    const url = `${apiBaseUrl}/api/v0/chat/completions`;
+                    
+                    const requestBody = { 
+                        model: model.replace(/ 🟢| ⚪| \([^)]*\)/g, ''), // Clean model name
+                        messages: [{ role: 'user', content: prompt }], 
+                        temperature: effectiveTemperature, 
+                        stream: false 
+                    };
+                    
+                    // DEBUG: Log della richiesta
+                    console.log('=== LMStudio Request Debug ===');
+                    console.log('Original baseUrl:', baseUrl);
+                    console.log('API baseUrl:', apiBaseUrl);
+                    console.log('Full request URL:', url);
+                    console.log('Original model:', model);
+                    console.log('Cleaned model:', requestBody.model);
+                    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+                    console.log('Prompt length:', prompt.length);
+                    console.log('Temperature:', effectiveTemperature);
+                    console.log('Environment:', process.env.NODE_ENV);
+                    console.log('==============================');
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody),
+                        // Add timeout
+                        signal: AbortSignal.timeout(30000) // 30 second timeout
+                    });
+                    
+                    if (!response.ok) {
+                        console.log('=== LMStudio Error Debug ===');
+                        console.log('Response status:', response.status);
+                        console.log('Response statusText:', response.statusText);
+                        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                        
+                        const errorText = await response.text().catch(() => 'Unknown error');
+                        console.log('Error response body:', errorText);
+                        console.log('============================');
+                        
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}. ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // DEBUG: Log della risposta completa
+                    console.log('=== LMStudio Response Debug ===');
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                    console.log('Full response data:', JSON.stringify(data, null, 2));
+                    console.log('data.choices:', data.choices);
+                    console.log('data.choices[0]:', data.choices?.[0]);
+                    console.log('data.choices[0].message:', data.choices?.[0]?.message);
+                    console.log('data.choices[0].message.content:', data.choices?.[0]?.message?.content);
+                    console.log('data.stats:', data.stats);
+                    console.log('data.model_info:', data.model_info);
+                    console.log('===============================');
+                    
+                    // Enhanced logging with native API stats
+                    const logData: any = {
+                        model: model.replace(/ 🟢| ⚪| \([^)]*\)/g, ''),
+                        baseUrl,
+                        responseLength: data.choices?.[0]?.message?.content?.length || 0,
+                        temperature: effectiveTemperature,
+                        usage: data.usage,
+                        apiType: 'native',
+                        fullResponseKeys: Object.keys(data),
+                        hasChoices: !!data.choices,
+                        choicesLength: data.choices?.length || 0
+                    };
+                    
+                    // Add native API specific stats if available
+                    if (data.stats) {
+                        logData.stats = {
+                            tokensPerSecond: data.stats.tokens_per_second,
+                            timeToFirstToken: data.stats.time_to_first_token,
+                            generationTime: data.stats.generation_time,
+                            stopReason: data.stats.stop_reason
+                        };
+                        
+                        if (data.model_info) {
+                            logData.modelInfo = {
+                                arch: data.model_info.arch,
+                                quant: data.model_info.quant,
+                                format: data.model_info.format,
+                                contextLength: data.model_info.context_length
+                            };
+                        }
+                    }
+                    
+                    loggingService.info('LMStudio API call successful', 'api', 'generation', logData);
+                    
+                    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                        throw new Error('Formato di risposta non valido da LMStudio');
+                    }
+                    
+                    return data.choices[0].message.content;
+                } catch (error) {
+                    console.log('=== LMStudio Catch Debug ===');
+                    console.log('Error type:', error?.constructor?.name);
+                    console.log('Error message:', error?.message);
+                    console.log('Error stack:', error?.stack);
+                    console.log('Is TypeError:', error instanceof TypeError);
+                    console.log('Is AbortError:', error?.name === 'AbortError');
+                    console.log('baseUrl used:', baseUrl);
+                    console.log('============================');
+                    
+                    let errorMessage = 'Failed to generate text with LMStudio';
+                    
+                    if (error instanceof TypeError && error.message.includes('fetch')) {
+                        errorMessage = `Impossibile connettere a LMStudio su ${baseUrl}. Verifica che LMStudio sia in esecuzione e che il server API sia attivo.`;
+                    } else if (error instanceof Error && error.name === 'AbortError') {
+                        errorMessage = 'Timeout della connessione a LMStudio. Il server potrebbe essere lento o sovraccarico.';
+                    } else if (error instanceof Error) {
+                        errorMessage = error.message;
+                    }
+                    
+                    const enhancedError = createApiError(
+                        errorMessage,
+                        error,
+                        {
+                            provider: 'lmstudio',
+                            model,
+                            baseUrl,
+                            endpoint: '/api/v0/chat/completions',
+                            promptLength: prompt.length
+                        }
+                    );
+                    throw new Error(errorMessage);
+                }
+            }
             default:
                 const error = createApiError(
                     `Unsupported provider: ${settings.provider}`,
                     undefined,
-                    { provider: settings.provider, supportedProviders: ['gemini', 'openrouter', 'ollama', 'zai'] }
+                    { provider: settings.provider, supportedProviders: ['gemini', 'openrouter', 'ollama', 'zai', 'lmstudio'] }
                 );
                 throw new Error(error.message);
         }
@@ -524,6 +680,112 @@ async function* generateTextStream(prompt: string, settings: AppSettings, modelC
                         console.error("Failed to parse stream chunk:", jsonStr);
                     }
                 }
+            }
+            break;
+        }
+        case 'lmstudio': {
+            const { baseUrl, selectedModel: model } = settings.config.lmstudio;
+            if (!baseUrl || !model) {
+                throw new Error("LMStudio Base URL and model must be configured in settings.");
+            }
+            
+            try {
+                // Get the correct API base URL (proxy-aware in development)
+                const apiBaseUrl = getApiBaseUrl(baseUrl);
+                
+                // Use native API only (provides better stats and native functionality)
+                const url = `${apiBaseUrl}/api/v0/chat/completions`;
+                
+                const requestBody = { 
+                    model: model.replace(/ 🟢| ⚪| \([^)]*\)/g, ''), // Clean model name
+                    messages: [{ role: 'user', content: prompt }], 
+                    temperature: effectiveTemperature, 
+                    stream: true 
+                };
+                
+                // DEBUG: Log della richiesta streaming
+                console.log('=== LMStudio Streaming Request Debug ===');
+                console.log('Original baseUrl:', baseUrl);
+                console.log('API baseUrl:', apiBaseUrl);
+                console.log('Full request URL:', url);
+                console.log('Original model:', model);
+                console.log('Cleaned model:', requestBody.model);
+                console.log('Request body:', JSON.stringify(requestBody, null, 2));
+                console.log('Prompt length:', prompt.length);
+                console.log('Temperature:', effectiveTemperature);
+                console.log('Environment:', process.env.NODE_ENV);
+                console.log('======================================');
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    console.log('=== LMStudio Streaming Error Debug ===');
+                    console.log('Response status:', response.status);
+                    console.log('Response statusText:', response.statusText);
+                    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                    
+                    const errorText = await response.text().catch(() => 'Unknown error');
+                    console.log('Error response body:', errorText);
+                    console.log('====================================');
+                    
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}. ${errorText}`);
+                }
+                
+                if (!response.body) {
+                    console.log('=== LMStudio Streaming No Body Debug ===');
+                    console.log('Response object:', response);
+                    console.log('Response.body is null/undefined');
+                    console.log('======================================');
+                    throw new Error('Nessun body di risposta da LMStudio');
+                }
+
+                console.log('=== LMStudio Streaming Success Debug ===');
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                console.log('Has response.body:', !!response.body);
+                console.log('LMStudio streaming using native API');
+                console.log('====================================');
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n').filter(line => line.trim().startsWith('data: '));
+                    
+                    for (const line of lines) {
+                        const jsonStr = line.replace('data: ', '');
+                        if (jsonStr === '[DONE]') continue;
+                        
+                        try {
+                            const parsed = JSON.parse(jsonStr);
+                            yield parsed.choices[0]?.delta?.content || '';
+                        } catch (e) {
+                            console.error("Failed to parse LMStudio stream chunk:", jsonStr);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('=== LMStudio Streaming Catch Debug ===');
+                console.log('Error type:', error?.constructor?.name);
+                console.log('Error message:', error?.message);
+                console.log('Error stack:', error?.stack);
+                console.log('Is TypeError:', error instanceof TypeError);
+                console.log('Is AbortError:', error?.name === 'AbortError');
+                console.log('baseUrl used:', baseUrl);
+                console.log('====================================');
+                
+                if (error instanceof TypeError && error.message.includes('fetch')) {
+                    throw new Error(`Impossibile connettere a LMStudio su ${baseUrl}. Verifica che LMStudio sia in esecuzione e che il server API sia attivo.`);
+                }
+                throw error;
             }
             break;
         }

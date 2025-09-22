@@ -20,6 +20,11 @@ const DEFAULTS: AppSettings = {
         zai: {
             apiKey: '',
         },
+        lmstudio: {
+            baseUrl: 'http://localhost:1234',
+            models: [],
+            selectedModel: '',
+        },
     },
     reasoningModeEnabled: true,
 };
@@ -56,6 +61,7 @@ export const useSettings = (): [AppSettings, (settings: AppSettings) => void] =>
                         ...(parsed.config || {}),
                         openrouter: { ...DEFAULTS.config.openrouter, ...(parsed.config?.openrouter || {}) },
                         ollama: { ...DEFAULTS.config.ollama, ...(parsed.config?.ollama || {}) },
+                        lmstudio: { ...DEFAULTS.config.lmstudio, ...(parsed.config?.lmstudio || {}) },
                       },
                 };
             }

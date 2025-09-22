@@ -50,7 +50,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     }
 
     const handleSelectedModelChange = (newModel: string) => {
-        if (provider === 'openrouter' || provider === 'ollama') {
+        if (provider === 'openrouter' || provider === 'ollama' || provider === 'lmstudio') {
             saveSettings({
                 ...settings,
                 config: {
@@ -66,7 +66,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
 
     const canGenerateTitle = hasContent && !isLoading && !isGeneratingTitle;
 
-    const isReasoningModeDisabled = provider === 'ollama';
+    const isReasoningModeDisabled = provider === 'ollama' || provider === 'lmstudio';
     
     return (
         <div className="bg-card text-card-foreground border rounded-lg p-2 flex flex-col gap-2 h-full shadow-lg shadow-black/20">
@@ -174,7 +174,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
 
                     </div>
                  )}
-                {(provider === 'openrouter' || provider === 'ollama') && (
+                {(provider === 'openrouter' || provider === 'ollama' || provider === 'lmstudio') && (
                     <div className="flex flex-col gap-1.5 bg-muted/30 p-2.5 rounded-lg border border-input">
                         <label htmlFor="model-name-select" className="font-medium text-foreground">Model</label>
                         <select
@@ -199,7 +199,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                 )}
                 <div 
                     className={`flex items-center justify-between bg-muted/30 p-2 rounded-md border border-input transition-opacity ${isReasoningModeDisabled ? 'opacity-60' : ''}`}
-                    title={isReasoningModeDisabled ? "Reasoning mode is not available for the Ollama provider." : "Toggles creative/reasoning capabilities. Disabling it may result in faster, more deterministic responses."}
+                    title={isReasoningModeDisabled ? "Reasoning mode is not available for the Ollama and LMStudio providers." : "Toggles creative/reasoning capabilities. Disabling it may result in faster, more deterministic responses."}
                 >
                     <label htmlFor="reasoning-mode-toggle" className={`flex items-center flex-grow pr-3 ${isReasoningModeDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                         <span className="text-sm font-medium text-foreground">Reasoning Mode</span>

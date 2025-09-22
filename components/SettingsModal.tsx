@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import type { AppSettings, ApiProvider } from '../types';
+import { fetchLMStudioModels, fetchOllamaModels, testProviderConnection } from '../utils/modelUtils';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -25,12 +26,73 @@ const InputField: React.FC<{ id: string; label: string; value: string; onChange:
     </div>
 );
 
+const ConnectionTester: React.FC<{
+    provider: 'ollama' | 'lmstudio';
+    baseUrl: string;
+}> = ({ provider, baseUrl }) => {
+    const [isTestingConnection, setIsTestingConnection] = useState(false);
+    const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [connectionMessage, setConnectionMessage] = useState('');
+
+    const testConnection = async () => {
+        if (!baseUrl.trim()) {
+            setConnectionStatus('error');
+            setConnectionMessage('Inserisci un URL valido');
+            return;
+        }
+
+        setIsTestingConnection(true);
+        setConnectionStatus('idle');
+        setConnectionMessage('');
+
+        try {
+            if (provider === 'lmstudio') {
+                await fetchLMStudioModels(baseUrl);
+                setConnectionStatus('success');
+                setConnectionMessage('Connessione riuscita! LMStudio è raggiungibile.');
+            } else if (provider === 'ollama') {
+                await fetchOllamaModels(baseUrl);
+                setConnectionStatus('success');
+                setConnectionMessage('Connessione riuscita! Ollama è raggiungibile.');
+            }
+        } catch (error) {
+            setConnectionStatus('error');
+            setConnectionMessage(error instanceof Error ? error.message : 'Errore di connessione sconosciuto');
+        } finally {
+            setIsTestingConnection(false);
+        }
+    };
+
+    return (
+        <div className="space-y-2">
+            <button
+                onClick={testConnection}
+                disabled={isTestingConnection || !baseUrl.trim()}
+                className="w-full px-3 py-2 text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50 rounded-md transition-colors"
+            >
+                {isTestingConnection ? 'Test in corso...' : 'Testa Connessione'}
+            </button>
+            {connectionStatus !== 'idle' && (
+                <div className={`text-sm p-2 rounded-md ${
+                    connectionStatus === 'success' 
+                        ? 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/30' 
+                        : 'text-destructive bg-destructive/10'
+                }`}>
+                    {connectionMessage}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const ModelManager: React.FC<{
-    provider: 'openrouter' | 'ollama';
+    provider: 'openrouter' | 'ollama' | 'lmstudio';
     localSettings: AppSettings;
     setLocalSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
 }> = ({ provider, localSettings, setLocalSettings }) => {
     const [newModel, setNewModel] = useState('');
+    const [isLoadingModels, setIsLoadingModels] = useState(false);
+    const [loadingError, setLoadingError] = useState('');
 
     const handleAddModel = () => {
         const trimmedModel = newModel.trim();
@@ -56,6 +118,51 @@ const ModelManager: React.FC<{
             };
         });
         setNewModel('');
+    };
+
+    const handleFetchModels = async () => {
+        if (provider === 'openrouter') return; // OpenRouter doesn't support model fetching from local server
+        
+        setIsLoadingModels(true);
+        setLoadingError('');
+
+        try {
+            let models: string[] = [];
+            if (provider === 'lmstudio') {
+                models = await fetchLMStudioModels(localSettings.config.lmstudio.baseUrl);
+            } else if (provider === 'ollama') {
+                models = await fetchOllamaModels(localSettings.config.ollama.baseUrl);
+            }
+
+            if (models.length === 0) {
+                setLoadingError('No models found. Make sure your server is running and has models loaded.');
+                return;
+            }
+
+            setLocalSettings(prev => {
+                const currentConfig = prev.config[provider];
+                const currentSelected = currentConfig.selectedModel;
+                const newSelectedModel = currentSelected && models.includes(currentSelected) 
+                    ? currentSelected 
+                    : models[0];
+
+                return {
+                    ...prev,
+                    config: {
+                        ...prev.config,
+                        [provider]: {
+                            ...currentConfig,
+                            models,
+                            selectedModel: newSelectedModel,
+                        }
+                    }
+                };
+            });
+        } catch (error) {
+            setLoadingError(`Failed to fetch models: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsLoadingModels(false);
+        }
     };
 
     const handleRemoveModel = (modelToRemove: string) => {
@@ -84,7 +191,46 @@ const ModelManager: React.FC<{
 
     return (
         <div className="space-y-3">
-            <label className="text-sm font-medium text-muted-foreground">Models</label>
+            <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-muted-foreground">Models</label>
+                {(provider === 'ollama' || provider === 'lmstudio') && (
+                    <button
+                        onClick={handleFetchModels}
+                        disabled={isLoadingModels}
+                        className="px-3 py-1 text-xs font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50 rounded-md transition-colors"
+                    >
+                        {isLoadingModels ? 'Loading...' : 'Fetch Models'}
+                    </button>
+                )}
+            </div>
+            {loadingError && (
+                <div className="text-sm text-destructive bg-destructive/10 p-2 rounded-md">
+                    {loadingError}
+                </div>
+            )}
+            {(localSettings.config[provider].models || []).length > 0 && (
+                <div className="flex flex-col gap-2">
+                    <label className="text-xs font-medium text-muted-foreground">Selected Model</label>
+                    <select
+                        value={localSettings.config[provider].selectedModel}
+                        onChange={(e) => setLocalSettings(prev => ({
+                            ...prev,
+                            config: {
+                                ...prev.config,
+                                [provider]: {
+                                    ...prev.config[provider],
+                                    selectedModel: e.target.value,
+                                }
+                            }
+                        }))}
+                        className="h-9 w-full rounded-md border border-input bg-background/50 px-2 py-1.5 text-sm"
+                    >
+                        {localSettings.config[provider].models.map(model => (
+                            <option key={model} value={model}>{model}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
             <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
                 {(localSettings.config[provider].models || []).map(model => (
                     <div key={model} className="flex items-center justify-between bg-background/50 p-2 rounded-md border border-input">
@@ -110,7 +256,7 @@ const ModelManager: React.FC<{
                         value={newModel}
                         onChange={e => setNewModel(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddModel(); } }}
-                        placeholder={provider === 'openrouter' ? "e.g., google/gemma-7b-it" : "e.g., llama3:8b"}
+                        placeholder={provider === 'openrouter' ? "e.g., google/gemma-7b-it" : provider === 'lmstudio' ? "e.g., gpt-4o-mini" : "e.g., llama3:8b"}
                         className="flex h-9 w-full rounded-md border border-input bg-background/50 px-3 py-1.5 text-sm"
                     />
                 </div>
@@ -176,6 +322,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                             <option value="openrouter">OpenRouter</option>
                             <option value="zai">Z.ai</option>
                             <option value="ollama">Ollama (Local)</option>
+                            <option value="lmstudio">LMStudio (Local)</option>
                         </select>
                     </div>
 
@@ -241,7 +388,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                                 placeholder="http://localhost:11434"
                                 description="The URL of your running Ollama instance."
                             />
+                            <ConnectionTester 
+                                provider="ollama" 
+                                baseUrl={localSettings.config.ollama.baseUrl} 
+                            />
                             <ModelManager provider="ollama" localSettings={localSettings} setLocalSettings={setLocalSettings} />
+                        </div>
+                    )}
+
+                    {localSettings.provider === 'lmstudio' && (
+                        <div className="space-y-4 animate-in fade-in-0">
+                             <h3 className="font-semibold">LMStudio</h3>
+                             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                                <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">🚀 Setup rapido</h4>
+                                <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                                    <li>1. Apri LMStudio e carica un modello</li>
+                                    <li>2. Vai alla scheda "Local Server" e avvia il server</li>
+                                    <li>3. Testa la connessione qui sotto</li>
+                                    <li>4. Usa "Fetch Models" per caricare i modelli disponibili</li>
+                                </ul>
+                             </div>
+                            <InputField
+                                id="lmstudio-baseurl"
+                                label="LMStudio Server URL"
+                                value={localSettings.config.lmstudio.baseUrl}
+                                onChange={(e) => updateProviderConfig('lmstudio', 'baseUrl', e.target.value)}
+                                placeholder="http://localhost:1234"
+                                description="L'URL della tua istanza LMStudio in esecuzione (solitamente http://localhost:1234)."
+                            />
+                            <ConnectionTester 
+                                provider="lmstudio" 
+                                baseUrl={localSettings.config.lmstudio.baseUrl} 
+                            />
+                            <ModelManager provider="lmstudio" localSettings={localSettings} setLocalSettings={setLocalSettings} />
                         </div>
                     )}
                 </main>
