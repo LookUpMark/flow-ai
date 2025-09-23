@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
       },
       server: {
         host: '0.0.0.0',
-        port: 3000,  // Cambiato a 3000 per compatibilità con LMStudio
+        port: 5174,  // Cambiato a 5174 per compatibilità Docker
         proxy: {
           // Proxy per LMStudio API per evitare problemi CORS in sviluppo
           '/api/v0': {

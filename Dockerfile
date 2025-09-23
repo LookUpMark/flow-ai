@@ -12,9 +12,9 @@ RUN npm install
 # Copy source code
 COPY . .
 
-EXPOSE 5173
+EXPOSE 5174
 
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["sh", "-c", "echo '🚀 Server starting on port 5174 inside container' && echo '🌐 Access the app at: http://localhost:5174' && npm run dev -- --host 0.0.0.0"]
 
 # Production stage (uses pre-built dist folder)
 FROM nginx:alpine AS production
