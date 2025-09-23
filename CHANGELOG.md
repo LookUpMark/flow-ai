@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-09-23
+
+### 🔧 Configuration & Developer Experience
+
+#### Port Configuration Improvements
+- **Unified Port 5174**: Standardized development server to use port 5174 for both Docker and local development
+- **Consistent Access**: Eliminated confusion between container internal ports and external access ports
+- **Docker Port Mapping**: Updated `docker-compose.yml` to use `5174:5174` mapping for clearer port configuration
+
+#### Docker Enhancements
+- **Enhanced Logging**: Added informative startup messages showing correct access URLs
+- **Better Developer Experience**: Container logs now clearly indicate access at `http://localhost:5174`
+- **Vite Configuration**: Updated Vite config to use port 5174 for consistency across all development environments
+
+#### Documentation Updates
+- **README.md**: Updated all port references and Docker setup instructions
+- **Recent Updates Section**: Added changelog summary in README for better visibility
+- **Troubleshooting Guide**: Enhanced troubleshooting section with port configuration help
+- **Architecture Documentation**: Updated project structure to reflect current codebase organization
+
+### 🛠️ Technical Changes
+
+- **docker-compose.yml**: Changed port mapping from `8000:5173` to `5174:5174`
+- **Dockerfile**: Updated EXPOSE directive from 5173 to 5174
+- **vite.config.ts**: Changed server port from 3000 to 5174
+- **Enhanced startup script**: Added clear messaging for container startup
+
+### 🐛 Fixes
+
+- **Port Consistency**: Resolved confusion between logged ports and actual access ports
+- **Docker Development**: Improved developer experience with unified port configuration
+- **Documentation Accuracy**: All documentation now reflects current configuration
+
+---
+
 ## [1.0.0] - 2025-09-22
 
 ### 🎉 Initial Release
