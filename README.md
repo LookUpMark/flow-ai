@@ -59,11 +59,11 @@ Whether you're conducting academic research, writing an in-depth article, or sim
 3.  **Start the development environment:**
     This command will start a container with hot-reloading enabled.
     ```bash
-    docker compose up
+    docker compose up --build
     ```
 
 4.  **Access and Configure:**
-    - **Access:** [http://localhost:8000](http://localhost:8000)
+    - **Access:** [http://localhost:5174](http://localhost:5174)
     - **Configure API Keys:** You can also configure API keys directly in the **Settings** panel for the desired AI providers (e.g., Google Gemini, OpenRouter).
 
 5.  **Production Deployment:**
@@ -86,9 +86,11 @@ Whether you're conducting academic research, writing an in-depth article, or sim
     ```
 
 2.  **Start the development server:**
+    The development server runs on port 5174 for consistency with Docker:
     ```bash
     npm run dev
     ```
+    - **Access:** [http://localhost:5174](http://localhost:5174)
 
 3.  **Configure API Keys:**
     Once the application is running, open the **Settings** panel to enter your API keys for the desired AI providers.
@@ -98,6 +100,21 @@ Whether you're conducting academic research, writing an in-depth article, or sim
     npm run build
     npm run preview
     ```
+
+## 🔄 Recent Updates
+
+### Port Configuration Update (v1.0.0)
+- **Unified Port Configuration**: Development server now consistently uses port **5174** for both Docker and local development
+- **Docker Improvements**: Enhanced Docker setup with clearer logging and unified port mapping (`5174:5174`)
+- **Better Developer Experience**: Container logs now clearly indicate the correct access URL
+- **LMStudio Integration**: Maintained proxy configuration for LMStudio API compatibility
+
+### Docker Configuration
+- **Development**: Access at [http://localhost:5174](http://localhost:5174)
+- **Production**: Access at [http://localhost:8080](http://localhost:8080)
+- **Container Internal Port**: 5174 (aligned with external access)
+
+---
 
 ## ⚙️ Usage and Configuration
 
@@ -109,37 +126,79 @@ Whether you're conducting academic research, writing an in-depth article, or sim
 4.  **Review the Results**: Examine the analysis and insights generated at each stage.
 5.  **Export the Results**: Download the final document in your preferred format (PDF, DOCX, Markdown).
 
+### Troubleshooting
+
+#### Port Issues
+- **Development**: Always use port **5174** for consistent access across Docker and local development
+- **Docker Logs**: Look for the message "🌐 Access the app at: http://localhost:5174" in container logs
+- **Port Conflicts**: If port 5174 is occupied, modify the `ports` section in `docker-compose.yml`
+
+#### LMStudio Integration
+- **API Endpoint**: The app proxies `/api/v0` requests to `http://localhost:1234`
+- **CORS Issues**: The proxy configuration handles cross-origin requests automatically
+- **Documentation**: See `/docs/LMSTUDIO_*.md` for detailed setup and troubleshooting
+
 ## 🏗️ Project Architecture
 
 The application follows a modular, component-based architecture to ensure maintainability and scalability.
 
 ```
 .
-├── /src
-│   ├── /components       # Reusable React components (UI)
-│   ├── /hooks            # Custom React hooks (state logic)
-│   ├── /services         # Integrations with external services (AI, export)
-│   ├── App.tsx           # Root application component
-│   ├── constants.ts      # Global constants and configurations
-│   ├── types.ts          # TypeScript type definitions
-│   └── index.tsx         # Application entry point
-├── /public               # Static assets
+├── /components           # Reusable React components (UI)
+│   ├── ErrorDashboard.tsx
+│   ├── ExportControls.tsx
+│   ├── Footer.tsx
+│   ├── Header.tsx
+│   ├── HistoryPanel.tsx
+│   ├── Icons.tsx
+│   ├── InputPanel.tsx
+│   ├── NotificationSystem.tsx
+│   ├── OutputPanel.tsx
+│   ├── PreviewDisplay.tsx
+│   ├── PreviewModal.tsx
+│   ├── SettingsModal.tsx
+│   └── StageDisplay.tsx
+├── /hooks                # Custom React hooks (state logic)
+│   ├── useHistory.ts
+│   └── useSettings.ts
+├── /services             # Integrations with external services (AI, export)
+│   ├── aiService.ts
+│   ├── errorService.ts
+│   ├── exportService.ts
+│   └── loggingService.ts
+├── /types                # TypeScript type definitions
+├── /utils                # Utility functions
+│   └── modelUtils.ts
+├── /docs                 # Documentation
+│   ├── LMSTUDIO_API_ENDPOINTS.md
+│   ├── LMSTUDIO_TROUBLESHOOTING.md
+│   └── SECURITY_*.md
+├── /specs                # Project specifications and planning
+├── /tests                # Test suites
+│   ├── contract/
+│   ├── integration/
+│   └── unit/
+├── App.tsx               # Root application component
+├── constants.ts          # Global constants and configurations
+├── types.ts              # Main TypeScript type definitions
+├── index.tsx             # Application entry point
 ├── .env.local.example    # Example file for environment variables
 ├── docker-compose.yml    # Docker Compose configuration
-├── Dockerfile            # Dockerfile for the development environment
+├── Dockerfile            # Multi-stage Dockerfile for dev/prod
 ├── nginx.conf            # Nginx configuration for production
 ├── package.json          # Project dependencies and scripts
-└── vite.config.ts        # Vite configuration
+└── vite.config.ts        # Vite configuration with proxy settings
 ```
 
 ### Technology Stack
 
--   **Frontend**: React 19, TypeScript, Tailwind CSS
--   **Build Tool**: Vite
--   **AI Integration**: Google Generative AI
+-   **Frontend**: React 19.1.1, TypeScript 5.8.2, Tailwind CSS
+-   **Build Tool**: Vite 6.2.0
+-   **AI Integration**: Google Generative AI (Gemini), LMStudio API support
 -   **File Processing**: PDF.js, Mammoth.js, JSZip
 -   **Exporting**: jsPDF, DocX
--   **Containerization**: Docker, Docker Compose
+-   **Development**: Hot reloading, TypeScript strict mode
+-   **Containerization**: Docker multi-stage builds, Docker Compose
 
 ## 📄 License
 
