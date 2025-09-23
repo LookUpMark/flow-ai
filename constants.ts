@@ -86,12 +86,20 @@ export const STAGE_PROMPTS = {
         **Directives:**
         1.  **Generate a Single HTML File:** Your output must be a single, complete HTML string starting with \`<!DOCTYPE html>\` and ending with \`</html>\`.
         2.  **Create an Embedded Stylesheet:** Inside the \`<head>\`, create a comprehensive \`<style>\` block.
-        3.  **Implement Styling Requirements:**
+        3.  **Implement Styling Requirements (Screen + Print/A4):**
             *   **Document Theme:** Set a background color on the \`body\` (e.g., \`#FFFFFF\`) and a high-contrast text color (e.g., \`#1A1A1A\`).
             *   **Typography:** Use a clean, sans-serif font like 'Inter'.
             *   **Layout:** Center content with a max-width (e.g., 800px) and padding.
             *   **Standard Elements:** Style headings, code blocks, tables, etc., for clarity.
             *   **Images & Pre-rendered Diagrams:** Style \`<img>\` tags with \`max-width: 100%; height: auto; border: 1px solid #E5E7EB; border-radius: 0.5rem; margin: 1rem 0;\` to ensure they are responsive and visually separated. This applies to diagrams that have already been converted to images.
+            *   **A4 Page Setup (CRITICAL):** The HTML must be standardized for printing to A4. Add \`@page\` and \`@media print\` rules to ensure paper-friendly output:
+                - \`@page { size: A4; margin: 15mm; }\`
+                - Under \`@media print\`, set a white background, high-contrast text, and remove non-essential visual effects (shadows, animations). Ensure text uses sensible line-height and font sizes for legibility.
+                - Force predictable pagination: avoid breaking inside headings, images, tables, code blocks, callouts, and Mermaid diagrams using \`page-break-inside: avoid; break-inside: avoid;\`. Prefer breaks before H2/H3 when needed using \`page-break-before: always;\` only if absolutely necessary.
+                - Constrain widths to page content area and prevent overflow. Set \`max-width: 100%\` and \`overflow-wrap: anywhere; word-break: break-word;\` for paragraphs and inline math to prevent text/equations from overflowing margins.
+                - For code blocks and tables, enable horizontal overflow handling without cutting content: \`overflow-x: auto;\` on screen; for print, scale down using \`scale(0.98)\` or reduce font-size slightly (e.g., 0.95em) while maintaining readability.
+                - Ensure images/diagrams never exceed printable area: \`max-width: 100%\`, \`height: auto\`, and \`page-break-inside: avoid\`.
+                - Add optional running headers/footers using CSS counters if helpful (page numbers with \`counter(page)\`).
         4.  **Translate Obsidian-Specific Syntax:**
             *   **Callouts (\`> [!info]\`):** Translate into styled \`div\` elements with unique colors and SVG icons.
             *   **Internal Links (\`[[Link]]\`):** Render as standard links (\`<a>\`) styled distinctly.
@@ -104,6 +112,7 @@ export const STAGE_PROMPTS = {
                 \`<script>document.addEventListener('DOMContentLoaded', () => { mermaid.initialize({ startOnLoad: true, theme: 'neutral' }); });</script>\`
         6.  **Render LaTeX Equations (if present):** To correctly render math, you **must** include the MathJax library in the \`<head>\`:
             \`<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>\`
+            - Configure CSS so inline/block equations wrap or scale to stay within A4 margins: apply \`.math, .mjx-chtml\` wrappers with \`max-width: 100%\`, \`overflow-wrap: anywhere\`, and allow shrinking in print via smaller font-size (e.g., 0.95em) if necessary.
         7.  **Strict Output Format:** Your output must be *only* the raw HTML content. Do not include any conversational text or comments.
         The full Markdown document to be translated is provided below.
     `
