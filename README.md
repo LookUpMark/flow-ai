@@ -218,7 +218,6 @@ The application follows a modular, component-based architecture to ensure mainta
 │   ├── LMSTUDIO_API_ENDPOINTS.md
 │   ├── LMSTUDIO_TROUBLESHOOTING.md
 │   └── SECURITY_*.md
-├── /specs                # Project specifications and planning
 ├── /tests                # Test suites
 │   ├── contract/
 │   ├── integration/
