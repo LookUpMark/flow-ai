@@ -17,11 +17,21 @@ export const STAGE_PROMPTS = {
         - Mathematical expressions: always use LaTeX syntax: $inline$ or $$block$$
         - Emphasis: use **bold** for key concepts, *italics* for emphasis
         **CONTENT RENDERING SPECIFICATIONS:**
-        - **Code Blocks:** Use triple backticks with language specification: \`\`\`language
+        - **Code Blocks:** ALWAYS use triple backticks with language specification:
+          \`\`\`python
+          def example_function():
+              return "Hello World"
+          \`\`\`
+          NEVER omit the opening \`\`\` backticks. Every code block MUST start with \`\`\`language and end with \`\`\`
         - **Mathematical Equations:** Use LaTeX syntax with proper delimiters:
           * Inline equations: $E = mc^2$
           * Display equations: $$\\int_{a}^{b} f(x) dx = F(b) - F(a)$$
-        - **Mermaid Diagrams:** Use proper syntax within code blocks: \`\`\`mermaid
+        - **Mermaid Diagrams:** Use proper syntax within code blocks:
+          \`\`\`mermaid
+          graph TD
+              A --> B
+          \`\`\`
+          CRITICAL: Always include the opening \`\`\`mermaid and closing \`\`\` for diagrams
         **Directives:**
         1. **Holistic Analysis:** Analyze *all* provided inputs to extract every single piece of information, concept, and data.
         2. **Identify Logical Thread:** Understand the main topic and identify the most natural logical sequence to present the information (chronological, from general to specific, cause-and-effect, etc.).
@@ -36,7 +46,11 @@ export const STAGE_PROMPTS = {
             - **Definitions:** Always format as: **Term**: Definition text
             - **Examples:** Always introduce with "Esempio:" or "Example:" based on language
             - **Mathematical Content:** Always use proper LaTeX: $formula$ or $$display$$
-            - **Code References:** Always use backticks and language when applicable
+            - **Code References:** MANDATORY format with complete code blocks:
+              \`\`\`language
+              code_here();
+              \`\`\`
+              NEVER write code without the triple backticks. Every code snippet MUST be in a proper code block.
         5. **Absolute Completeness:** At this stage, the priority is completeness, not conciseness. **Do not omit anything.** Every detail, even if seemingly minor, must be included in the structure.
         6. **Strict Output Format:** Your entire response must be *only* the raw Markdown content. Do not include any conversational text, headings, or comments like "Here is the synthesized markdown". Your output will be directly passed to the next agent.
         **Output:** A single, well-organized, and complete Markdown (.md) file, serving as a "master draft" for the rest of the workflow.
@@ -52,9 +66,13 @@ export const STAGE_PROMPTS = {
         - Use identical bullet point and numbering styles
         - Preserve LaTeX equation formatting exactly as received
         **CONTENT RENDERING PRESERVATION:**
-        - **Code Blocks:** Maintain exact same formatting and language specifications
+        - **Code Blocks:** MAINTAIN exact formatting with MANDATORY triple backticks:
+          \`\`\`language
+          code_content_here();
+          \`\`\`
+          CRITICAL: Never remove or omit the opening \`\`\` backticks from code blocks. Every code block must remain properly formatted.
         - **Mathematical Equations:** Preserve LaTeX syntax exactly: $inline$ and $$display$$
-        - **Mermaid Diagrams:** Keep diagram syntax unchanged and properly formatted
+        - **Mermaid Diagrams:** Keep diagram syntax unchanged and properly formatted with \`\`\`mermaid opening
         - **Formatting Elements:** Maintain backticks, bold, italics, and all special formatting
         **Directives:**
         1. **Format-Preserving Analysis:** Scrutinize the text to identify and eliminate redundancy while maintaining ALL formatting standards established in the synthesis stage.
@@ -64,8 +82,15 @@ export const STAGE_PROMPTS = {
             - **Technical Terms:** Keep \`backtick formatting\` for all technical concepts
             - **Definitions:** Maintain **Term**: Definition structure exactly
             - **Mathematical Content:** Preserve LaTeX formatting: $E=mc^2$ or $$\\sum_{i=1}^{n} x_i$$
-            - **Code Examples:** Keep language specifications and proper indentation
-            - **Mermaid Diagrams:** Preserve complete diagram structure and syntax
+            - **Code Examples:** MANDATORY preservation of complete code block structure:
+              \`\`\`language
+              preserved_code_here();
+              \`\`\`
+              NEVER omit opening or closing backticks. Code blocks must remain intact.
+            - **Mermaid Diagrams:** Preserve complete diagram structure:
+              \`\`\`mermaid
+              diagram_syntax_here
+              \`\`\`
         5. **Absolute Prohibition of Omissions:** This is your most important rule. Every unit of information, every piece of data, every unique concept present in the input **must be preserved**. The text must become more information-dense, not poorer.
         6. **Structural Consistency:** Maintain exact heading levels, bullet point styles, and spacing patterns from the input.
         7. **Strict Output Format:** Your entire response must be *only* the raw Markdown content. Do not include any conversational text, headings, or comments like "Here is the condensed text". Your output will be directly passed to the next agent.
@@ -85,26 +110,29 @@ export const STAGE_PROMPTS = {
           * Inline: $\\alpha = \\frac{\\beta}{\\gamma}$ (proper escaping)
           * Display: $$\\int_{0}^{\\infty} e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}$$ (centered, proper spacing)
           * Matrix notation: $$\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$$
-        - **Code Block Standards:** Always specify language and use proper syntax:
+        - **Code Block Standards:** ALWAYS specify language and use COMPLETE triple backtick syntax:
           \`\`\`python
           def function_name(parameter):
               return parameter * 2
           \`\`\`
-        - **Mermaid Diagram Standards:** Use consistent syntax and proper indentation:
+          CRITICAL RULE: Every single code example MUST have opening \`\`\`language and closing \`\`\`. NEVER omit backticks.
+        - **Mermaid Diagram Standards:** Use COMPLETE syntax with proper backticks:
           \`\`\`mermaid
           graph TD
               A[Start] --> B{Decision}
               B -->|Yes| C[Action]
               B -->|No| D[Alternative]
           \`\`\`
+          MANDATORY: Always include \`\`\`mermaid opening and \`\`\` closing for every diagram.
         **Directives:**
         1. **Improve Logical Flow and Clarity:** Rewrite sentences for readability while maintaining ALL formatting standards. Insert transition words and phrases to make logical connections explicit. Simplify complex sentences and explain technical jargon. The primary goal is comprehension.
         2. **Strategic Enrichment:** After improving the text, analyze it for opportunities to add value. Add the following elements **only if they provide significant clarification** and you are confident in their accuracy:
-            - **Code Snippets:** For programming concepts, add short, well-formatted code examples:
+            - **Code Snippets:** For programming concepts, add short, well-formatted code examples with COMPLETE backtick syntax:
               \`\`\`language
               // Clear, commented examples
               code_here();
               \`\`\`
+              ABSOLUTE REQUIREMENT: Every code block MUST start with \`\`\`language and end with \`\`\`. Never omit backticks.
             - **Mathematical Examples:** For formulas, provide concrete numerical examples:
               $f(x) = x^2$ con $x = 3$ gives $f(3) = 9$
             - **Tables:** For structured data, use consistent table formatting:
@@ -116,7 +144,7 @@ export const STAGE_PROMPTS = {
             - **System Architecture:** Use \`graph LR\` for component relationships  
             - **Sequence Diagrams:** Use \`sequenceDiagram\` for interactions
             - **Class Diagrams:** Use \`classDiagram\` for object relationships
-            Example template:
+            MANDATORY Template with COMPLETE backtick syntax:
             \`\`\`mermaid
             graph TD
                 A[Start Process] --> B{Condition Check}
@@ -125,16 +153,26 @@ export const STAGE_PROMPTS = {
                 C --> E[End Process]
                 D --> E
             \`\`\`
+            CRITICAL: Every Mermaid diagram MUST have \`\`\`mermaid opening and \`\`\` closing. Never omit backticks.
         4. **Content Enhancement Standards:**
             - **Examples:** Always introduce with standardized language: "Esempio:" (IT) / "Example:" (EN)
             - **Definitions:** Format as: **Term**: Clear definition with context
             - **Mathematical Proofs:** Use proper LaTeX with step-by-step formatting
-            - **Code Explanations:** Include inline comments and clear variable names
+            - **Code Explanations:** Include inline comments and clear variable names with MANDATORY complete backticks:
+              \`\`\`python
+              # Example with clear comments
+              def calculate_area(radius):
+                  """Calculate circle area"""
+                  return 3.14159 * radius ** 2
+              \`\`\`
+              NEVER write code examples without the full \`\`\`language opening and \`\`\` closing.
         5. **Preserve All Information:** Do not omit any information from the input text. You are enhancing, not condensing.
         6. **Quality Control for Rendering:**
             - Verify all LaTeX equations use proper escaping: \\alpha, \\beta, \\sum, \\int
-            - Ensure Mermaid syntax follows proper indentation and node naming
+            - CRITICAL: Ensure EVERY code block has complete triple backtick syntax with opening \`\`\`language and closing \`\`\`
+            - Verify Mermaid syntax follows proper indentation and node naming WITH complete backticks
             - Check all code blocks have language specification and proper formatting
+            - NEVER allow code without proper backtick delimiters - this breaks rendering
         7. **Strict Output Format:** Your entire response must be *only* the raw Markdown content. Do not include any conversational text or comments.
         **Output:** A Markdown document that is not only concise but also extremely clear, easy to follow, and enriched with visual and practical aids that render perfectly.
     `,
@@ -144,22 +182,20 @@ export const STAGE_PROMPTS = {
         **CRITICAL LANGUAGE INSTRUCTION:** Maintain the EXACT same language as the input text throughout the entire document. All headings, content, callouts, and metadata must be in the same language as the input. Do not translate any content.
         **ABSOLUTE STANDARDIZATION TEMPLATE (MANDATORY):**
         This template MUST be followed exactly for maximum consistency across all outputs:
-        \`\`\`yaml
         ---
         title: [Descriptive Note Title - SAME LANGUAGE AS INPUT]
         aliases: [Alternative names, Key synonyms]
-        tags: [#topic/primary, #category/secondary, #type/note]
+        tags: [topic/primary, category/secondary, type/note]
         creation_date: ${new Date().toISOString().split('T')[0]}
         last_modified: ${new Date().toISOString().split('T')[0]}
         status: complete
         ---
-        \`\`\`
         **OBSIDIAN-SPECIFIC RENDERING STANDARDS:**
         - **Mathematical Equations:** Ensure LaTeX compatibility with Obsidian's MathJax:
           * Inline: $\\alpha = \\frac{\\beta}{\\gamma}$ (proper escaping for Obsidian)
           * Display: $$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$
           * Complex expressions: $$\\begin{align} f(x) &= ax^2 + bx + c \\\\ &= a(x - h)^2 + k \\end{align}$$
-        - **Mermaid Diagrams:** Optimize for Obsidian's Mermaid plugin:
+        - **Mermaid Diagrams:** Optimize for Obsidian's Mermaid plugin with COMPLETE backtick syntax:
           \`\`\`mermaid
           %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ff0000'}}}%%
           graph TD
@@ -167,19 +203,22 @@ export const STAGE_PROMPTS = {
               B -->|Yes Path| C[Action Result]
               B -->|No Path| D[Alternative Result]
           \`\`\`
-        - **Code Blocks:** Use Obsidian-compatible syntax highlighting:
+          CRITICAL: Every Mermaid diagram MUST have \`\`\`mermaid opening and \`\`\` closing.
+        - **Code Blocks:** Use Obsidian-compatible syntax highlighting with MANDATORY complete backticks:
           \`\`\`python
           # Always include language specification
           def example_function(param: str) -> str:
               """Clear docstrings for documentation."""
               return f"Processed: {param}"
           \`\`\`
+          ABSOLUTE REQUIREMENT: Never omit opening \`\`\` or closing \`\`\` from any code block.
         **Directives:**
         1. **Syntactic Validation & Standardization:** Perform comprehensive validation:
             - Verify ALL LaTeX equations use double backslashes: \\\\alpha, \\\\beta, \\\\sum
-            - Check Mermaid diagrams have consistent indentation and valid syntax
-            - Ensure all code blocks specify language and use proper formatting
+            - CRITICAL: Check EVERY code block has complete triple backtick syntax: \`\`\`language opening and \`\`\` closing
+            - Verify Mermaid diagrams have consistent indentation and valid syntax WITH proper backticks
             - Validate table formatting with proper column alignment
+            - NEVER allow any code block without complete backtick delimiters
         2. **Apply Obsidian-Specific Syntax with EXACT Standards:**
             - **Internal Links:** Transform key concepts to: [[Concept Name|Display Text]]
               * Use consistent naming: PascalCase for concepts, kebab-case for topics
@@ -212,10 +251,12 @@ export const STAGE_PROMPTS = {
             - **Process Lists:** Always use numbered lists for step-by-step procedures
         5. **Quality Assurance for Perfect Rendering:**
             - Test that all LaTeX equations would render in Obsidian (double escaping)
-            - Verify Mermaid diagrams use valid syntax and proper theming
+            - CRITICAL: Verify EVERY code block uses complete backtick syntax and would render properly
+            - Verify Mermaid diagrams use valid syntax and proper theming WITH complete backticks
             - Ensure internal links follow Obsidian conventions
             - Check that all callouts use proper Obsidian syntax
-            - Validate that code blocks have language specification
+            - Validate that code blocks have language specification AND complete triple backtick delimiters
+            - NEVER allow malformed code blocks that would break rendering
         6. **Cross-Reference Integration:** Add relevant links to create knowledge network:
             - Link to broader topics: [[Machine Learning]] from specific algorithms
             - Link to related concepts: [[Neural Networks]] from deep learning content
@@ -246,6 +287,8 @@ export const STAGE_PROMPTS = {
           * Line numbers for readability
           * Copy-to-clipboard functionality
           * Responsive design for mobile viewing
+          * CRITICAL: Properly parse code blocks that start with \`\`\`language and end with \`\`\`
+          * Handle malformed code blocks gracefully and render them correctly
         - **Obsidian Syntax Translation:**
           * Callouts: Transform to visually distinct HTML elements
           * Internal links: Convert to anchor tags with styling
@@ -253,7 +296,8 @@ export const STAGE_PROMPTS = {
         **Directives:**
         1.  **Generate Standards-Compliant HTML:** Your output must be a single, complete HTML string starting with \`<!DOCTYPE html>\` and ending with \`</html>\`. Include proper meta tags for character encoding and viewport.
         2.  **Professional Styling System:** Create a comprehensive embedded stylesheet with:
-            - **Modern Typography:** Use system fonts with fallbacks: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif
+            - **Modern Typography:** Use reliable system fonts with comprehensive fallbacks: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif
+            - **Font Loading:** Include font-display: swap for better performance and fallback handling
             - **Responsive Design:** Mobile-first approach with proper breakpoints
             - **Color System:** Use CSS custom properties for consistent theming
             - **Professional Layout:** Centered content, optimal line length, proper spacing
@@ -294,6 +338,8 @@ export const STAGE_PROMPTS = {
             - Add line numbers for code readability
             - Include language labels
             - Implement copy-to-clipboard functionality
+            - CRITICAL: Ensure proper parsing of Markdown code blocks with \`\`\`language syntax
+            - Handle edge cases where code blocks might be missing opening backticks
         6.  **Print Optimization (A4 Standard):** Include comprehensive print styles:
             \`@page { size: A4; margin: 20mm 15mm; }
             @media print {
@@ -316,7 +362,6 @@ export const STAGE_PROMPTS = {
             - **Tags:** Render as clickable pill badges
             - **Comments:** Remove or convert to HTML comments
         9.  **HTML Structure Template (MANDATORY):** Follow this exact structure:
-            \`\`\`html
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -349,11 +394,12 @@ export const STAGE_PROMPTS = {
                 <script>/* Mermaid init */</script>
             </body>
             </html>
-            \`\`\`
         10. **Quality Assurance Checklist:**
             - Validate that all LaTeX equations render without quirks mode warnings
             - Ensure Mermaid diagrams display correctly with responsive sizing
-            - Check that code blocks have proper syntax highlighting
+            - CRITICAL: Check that ALL code blocks have proper syntax highlighting and render correctly
+            - Verify that code blocks with \`\`\`language syntax are parsed properly
+            - Handle malformed code blocks gracefully (missing opening backticks, etc.)
             - Verify print styles produce professional A4 output
             - Test accessibility with proper semantic markup
             - Confirm all Obsidian callouts convert to visually distinct elements
