@@ -139,12 +139,18 @@ export const STAGE_PROMPTS = {
               | Column 1 | Column 2 | Column 3 |
               |----------|----------|----------|
               | Value 1  | Value 2  | Value 3  |
-        3. **Advanced Mermaid Visualization Rules:** Generate diagrams ONLY when they clarify complex processes:
-            - **Process Flow:** Use \`graph TD\` for sequential workflows
-            - **System Architecture:** Use \`graph LR\` for component relationships  
+        3. **Advanced Mermaid Visualization Rules:** Generate diagrams ONLY when they clarify complex processes. Use ONLY the validated syntax patterns from MERMAID_EXAMPLES constant as your single source of truth:
+            - **Process Flow:** Use \`flowchart TD\` or \`flowchart LR\` for sequential workflows
+            - **System Architecture:** Use \`flowchart LR\` for component relationships  
             - **Sequence Diagrams:** Use \`sequenceDiagram\` for interactions
             - **Class Diagrams:** Use \`classDiagram\` for object relationships
-            MANDATORY Template with COMPLETE backtick syntax:
+            - **State Management:** Use \`stateDiagram-v2\` for state transitions
+            - **Data Visualization:** Use \`pie\` charts for proportional data
+            - **Project Management:** Use \`gantt\` charts for timelines
+            - **User Experience:** Use \`journey\` diagrams for user flows
+            - **System Context:** Use \`C4Context\` for architecture diagrams
+            - **Version Control:** Use \`gitGraph\` for git workflow visualization
+            MANDATORY: Always follow the exact syntax patterns from MERMAID_EXAMPLES constant. Never deviate from these validated examples:
             \`\`\`mermaid
             graph TD
                 A[Start Process] --> B{Condition Check}
@@ -195,7 +201,7 @@ export const STAGE_PROMPTS = {
           * Inline: $\\alpha = \\frac{\\beta}{\\gamma}$ (proper escaping for Obsidian)
           * Display: $$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$
           * Complex expressions: $$\\begin{align} f(x) &= ax^2 + bx + c \\\\ &= a(x - h)^2 + k \\end{align}$$
-        - **Mermaid Diagrams:** Optimize for Obsidian's Mermaid plugin with COMPLETE backtick syntax:
+        - **Mermaid Diagrams:** Optimize for Obsidian's Mermaid plugin using ONLY the validated syntax from MERMAID_EXAMPLES constant:
           \`\`\`mermaid
           %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ff0000'}}}%%
           graph TD
@@ -203,7 +209,7 @@ export const STAGE_PROMPTS = {
               B -->|Yes Path| C[Action Result]
               B -->|No Path| D[Alternative Result]
           \`\`\`
-          CRITICAL: Every Mermaid diagram MUST have \`\`\`mermaid opening and \`\`\` closing.
+          CRITICAL: Every Mermaid diagram MUST have \`\`\`mermaid opening and \`\`\` closing. Always follow exact syntax patterns from MERMAID_EXAMPLES.
         - **Code Blocks:** Use Obsidian-compatible syntax highlighting with MANDATORY complete backticks:
           \`\`\`python
           # Always include language specification
@@ -216,7 +222,7 @@ export const STAGE_PROMPTS = {
         1. **Syntactic Validation & Standardization:** Perform comprehensive validation:
             - Verify ALL LaTeX equations use double backslashes: \\\\alpha, \\\\beta, \\\\sum
             - CRITICAL: Check EVERY code block has complete triple backtick syntax: \`\`\`language opening and \`\`\` closing
-            - Verify Mermaid diagrams have consistent indentation and valid syntax WITH proper backticks
+            - Verify Mermaid diagrams have consistent indentation and valid syntax using ONLY patterns from MERMAID_EXAMPLES constant WITH proper backticks
             - Validate table formatting with proper column alignment
             - NEVER allow any code block without complete backtick delimiters
         2. **Apply Obsidian-Specific Syntax with EXACT Standards:**
@@ -252,7 +258,7 @@ export const STAGE_PROMPTS = {
         5. **Quality Assurance for Perfect Rendering:**
             - Test that all LaTeX equations would render in Obsidian (double escaping)
             - CRITICAL: Verify EVERY code block uses complete backtick syntax and would render properly
-            - Verify Mermaid diagrams use valid syntax and proper theming WITH complete backticks
+            - Verify Mermaid diagrams use valid syntax from MERMAID_EXAMPLES constant and proper theming WITH complete backticks
             - Ensure internal links follow Obsidian conventions
             - Check that all callouts use proper Obsidian syntax
             - Validate that code blocks have language specification AND complete triple backtick delimiters
@@ -406,6 +412,167 @@ export const STAGE_PROMPTS = {
         11. **Strict Output Format:** Your output must be *only* the complete HTML content following the template structure. Do not include any explanatory text, comments, or conversational content outside the HTML document.
         The full Markdown document to be translated is provided below.
     `
+};
+
+// MERMAID_EXAMPLES: Authoritative catalog of Mermaid diagram examples as single source of truth
+export const MERMAID_EXAMPLES = {
+    flowchart: {
+        syntax: `flowchart LR
+
+A[Hard] -->|Text| B(Round)
+B --> C{Decision}
+C -->|One| D[Result 1]
+C -->|Two| E[Result 2]`,
+        description: 'Basic flowchart with rectangular, round, and diamond shapes'
+    },
+    sequenceDiagram: {
+        syntax: `sequenceDiagram
+Alice->>John: Hello John, how are you?
+loop HealthCheck
+    John->>John: Fight against hypochondria
+end
+Note right of John: Rational thoughts!
+John-->>Alice: Great!
+John->>Bob: How about you?
+Bob-->>John: Jolly good!`,
+        description: 'Sequence diagram showing message flow between participants'
+    },
+    ganttChart: {
+        syntax: `gantt
+    section Section
+    Completed :done,    des1, 2014-01-06,2014-01-08
+    Active        :active,  des2, 2014-01-07, 3d
+    Parallel 1   :         des3, after des1, 1d
+    Parallel 2   :         des4, after des1, 1d
+    Parallel 3   :         des5, after des3, 1d
+    Parallel 4   :         des6, after des4, 1d`,
+        description: 'Gantt chart for project timeline visualization'
+    },
+    classDiagram: {
+        syntax: `classDiagram
+Class01 <|-- AveryLongClass : Cool
+<<Interface>> Class01
+Class09 --> C2 : Where am I?
+Class09 --* C3
+Class09 --|> Class07
+Class07 : equals()
+Class07 : Object[] elementData
+Class01 : size()
+Class01 : int chimp
+Class01 : int gorilla
+class Class10 {
+  <<service>>
+  int id
+  size()
+}`,
+        description: 'Class diagram showing inheritance and relationships'
+    },
+    stateDiagram: {
+        syntax: `stateDiagram-v2
+[*] --> Still
+Still --> [*]
+Still --> Moving
+Moving --> Still
+Moving --> Crash
+Crash --> [*]`,
+        description: 'State diagram showing state transitions'
+    },
+    pieChart: {
+        syntax: `pie
+"Dogs" : 386
+"Cats" : 85.9
+"Rats" : 15`,
+        description: 'Pie chart for data visualization'
+    },
+    gitGraph: {
+        syntax: `gitGraph
+  commit
+  commit
+  branch develop
+  checkout develop
+  commit
+  commit
+  checkout main
+  merge develop
+  commit
+  commit`,
+        description: 'Git graph showing branch and merge flow'
+    },
+    ganttBarChart: {
+        syntax: `gantt
+    title Git Issues - days since last update
+    dateFormat  X
+    axisFormat %s
+
+    section Issue19062
+    71   : 0, 71
+    section Issue19401
+    36   : 0, 36
+    section Issue193
+    34   : 0, 34
+    section Issue7441
+    9    : 0, 9
+    section Issue1300
+    5    : 0, 5`,
+        description: 'Gantt chart used as bar chart for metrics'
+    },
+    userJourney: {
+        syntax: `journey
+    title My working day
+    section Go to work
+      Make tea: 5: Me
+      Go upstairs: 3: Me
+      Do work: 1: Me, Cat
+    section Go home
+      Go downstairs: 5: Me
+      Sit down: 3: Me`,
+        description: 'User journey diagram mapping experience flow'
+    },
+    c4Context: {
+        syntax: `C4Context
+title System Context diagram for Internet Banking System
+
+Person(customerA, "Banking Customer A", "A customer of the bank, with personal bank accounts.")
+Person(customerB, "Banking Customer B")
+Person_Ext(customerC, "Banking Customer C")
+System(SystemAA, "Internet Banking System", "Allows customers to view information about their bank accounts, and make payments.")
+
+Person(customerD, "Banking Customer D", "A customer of the bank, <br/> with personal bank accounts.")
+
+Enterprise_Boundary(b1, "BankBoundary") {
+
+  SystemDb_Ext(SystemE, "Mainframe Banking System", "Stores all of the core banking information about customers, accounts, transactions, etc.")
+
+  System_Boundary(b2, "BankBoundary2") {
+    System(SystemA, "Banking System A")
+    System(SystemB, "Banking System B", "A system of the bank, with personal bank accounts.")
+  }
+
+  System_Ext(SystemC, "E-mail system", "The internal Microsoft Exchange e-mail system.")
+  SystemDb(SystemD, "Banking System D Database", "A system of the bank, with personal bank accounts.")
+
+  Boundary(b3, "BankBoundary3", "boundary") {
+    SystemQueue(SystemF, "Banking System F Queue", "A system of the bank, with personal bank accounts.")
+    SystemQueue_Ext(SystemG, "Banking System G Queue", "A system of the bank, with personal bank accounts.")
+  }
+}
+
+BiRel(customerA, SystemAA, "Uses")
+BiRel(SystemAA, SystemE, "Uses")
+Rel(SystemAA, SystemC, "Sends e-mails", "SMTP")
+Rel(SystemC, customerA, "Sends e-mails to")`,
+        description: 'C4 context diagram for system architecture'
+    }
+} as const;
+
+// Helper function to get all valid Mermaid examples as a formatted string
+export const getMermaidExamplesReference = (): string => {
+    return Object.entries(MERMAID_EXAMPLES)
+        .map(([type, example]) => `**${type}:** ${example.description}
+\`\`\`mermaid
+${example.syntax}
+\`\`\``)
+        .join('\n\n');
 };
 
 // FIX: Add TEMPLATES constant for export styling and provide strong typing to prevent downstream errors.

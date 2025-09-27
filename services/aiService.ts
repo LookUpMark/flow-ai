@@ -1,6 +1,6 @@
 // FIX: Import GenerateImagesResponse to correctly type the response from the image generation API.
 import { GoogleGenAI, GenerateImagesResponse } from "@google/genai";
-import { STAGE_PROMPTS } from '../constants';
+import { STAGE_PROMPTS, MERMAID_EXAMPLES, getMermaidExamplesReference } from '../constants';
 import type { Stage, ModelConfigType, AppSettings, OutputLanguage } from '../types';
 import { errorManager, createApiError, createProcessingError, ERROR_CODES } from './errorService';
 import { loggingService, logApiCall, logPerformanceMetric } from './loggingService';
@@ -848,8 +848,14 @@ export async function* runKnowledgePipeline(
     const pipelineStages: { stage: Stage; prompt: string }[] = [
         { stage: 'synthesizer', prompt: STAGE_PROMPTS.synthesizer },
         { stage: 'condenser', prompt: STAGE_PROMPTS.condenser },
-        { stage: 'enhancer', prompt: STAGE_PROMPTS.enhancer },
-        { stage: 'finalizer', prompt: STAGE_PROMPTS.finalizer },
+        { 
+            stage: 'enhancer', 
+            prompt: `${STAGE_PROMPTS.enhancer}\n---\nMERMAID DIAGRAM EXAMPLES REFERENCE (MANDATORY USAGE):\nUse ONLY these validated syntax patterns for any Mermaid diagrams:\n\n${getMermaidExamplesReference()}`
+        },
+        { 
+            stage: 'finalizer', 
+            prompt: `${STAGE_PROMPTS.finalizer}\n---\nMERMAID DIAGRAM EXAMPLES REFERENCE (MANDATORY USAGE):\nUse ONLY these validated syntax patterns for any Mermaid diagrams:\n\n${getMermaidExamplesReference()}`
+        },
     ];
     
     for (const { stage, prompt } of pipelineStages) {
