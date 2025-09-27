@@ -21,6 +21,8 @@ dist-ssr
 .gemini
 .qwen
 
+GEMINI.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
