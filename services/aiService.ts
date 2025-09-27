@@ -853,6 +853,10 @@ export async function* runKnowledgePipeline(
             prompt: `${STAGE_PROMPTS.enhancer}\n---\nMERMAID DIAGRAM EXAMPLES REFERENCE (MANDATORY USAGE):\nUse ONLY these validated syntax patterns for any Mermaid diagrams:\n\n${getMermaidExamplesReference()}`
         },
         { 
+            stage: 'mermaidValidator', 
+            prompt: `${STAGE_PROMPTS.mermaidValidator}\n---\nMERMAID_EXAMPLES CATALOG (SINGLE SOURCE OF TRUTH):\n\n${getMermaidExamplesReference()}`
+        },
+        { 
             stage: 'finalizer', 
             prompt: `${STAGE_PROMPTS.finalizer}\n---\nMERMAID DIAGRAM EXAMPLES REFERENCE (MANDATORY USAGE):\nUse ONLY these validated syntax patterns for any Mermaid diagrams:\n\n${getMermaidExamplesReference()}`
         },
