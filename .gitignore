@@ -18,6 +18,8 @@ dist-ssr
 .kilocode
 .specify
 .specs
+.gemini
+.qwen
 
 # Editor directories and files
 .vscode/*
