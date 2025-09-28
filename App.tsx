@@ -13,7 +13,7 @@ import { NotificationSystem } from './components/NotificationSystem';
 import ErrorDashboard from './components/ErrorDashboard';
 import type { HistoryItem } from './hooks/useHistory';
 import { errorManager, createFileError, createValidationError } from './services/errorService';
-import { loggingService, logUserAction, logPerformanceMetric } from './services/loggingService';
+import { loggingService, logUserAction, logPerformanceMetric, logApiCall } from './services/loggingService';
 
 declare const pdfjsLib: any;
 declare const mammoth: any;
@@ -95,7 +95,7 @@ const App: React.FC = () => {
     }, []);
     
     const [outputs, setOutputs] = useState<StageOutputs>({
-        synthesizer: '', condenser: '', enhancer: '', 
+        synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '',
         finalizer: '', htmlTranslator: '',
     });
     const [initialInput, setInitialInput] = useState<string>('');
@@ -132,7 +132,7 @@ const App: React.FC = () => {
 
     const handleGenerate = useCallback(async () => {
     setError(null);
-    setOutputs({ synthesizer: '', condenser: '', enhancer: '', finalizer: '', htmlTranslator: '' });
+    setOutputs({ synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', finalizer: '', htmlTranslator: '' });
     setThroughput(0);
 
     const combinedInput = `File Content:\n${fileContent}\n\nUser Text:\n${rawText}`;
@@ -159,18 +159,16 @@ const App: React.FC = () => {
             generateHtmlPreview
         });
         
-        loggingService.startPerformanceTracking(pipelineId, {
-            inputLength: combinedInput.length,
-            provider: settings.provider,
-            modelConfig,
-                stages: ['synthesizer', 'condenser', 'enhancer', 'finalizer', 'htmlTranslator']
+        loggingService.info('Starting knowledge pipeline', 'pipeline', 'start', {
+            model: modelConfig.model,
+            temperature: modelConfig.temperature,
+            inputSize: combinedInput.length,
+            stages: ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator']
         });
 
         let totalChars = 0;
         const startTime = Date.now();
-    const finalOutputs: StageOutputs = { synthesizer: '', condenser: '', enhancer: '', finalizer: '', htmlTranslator: '' };
-
-        try {
+    const finalOutputs: StageOutputs = { synthesizer: '', condenser: '', enhancer: '', mermaidValidator: '', finalizer: '', htmlTranslator: '' };        try {
             const pipelineStream = runKnowledgePipeline(
                 combinedInput,
                 topic,

@@ -21,11 +21,12 @@ const ALL_STAGES: { id: Stage; title: string; icon: React.ReactNode }[] = [
     { id: 'synthesizer', title: 'Synthesize', icon: <BrainIcon /> },
     { id: 'condenser', title: 'Condense', icon: <FilterIcon /> },
     { id: 'enhancer', title: 'Enhance', icon: <WandIcon /> },
+    { id: 'mermaidValidator', title: 'Validate Mermaid', icon: <WandIcon /> },
     { id: 'finalizer', title: 'Finalize', icon: <ObsidianIcon /> },
     { id: 'htmlTranslator', title: 'Preview', icon: <EyeIcon /> },
 ];
 
-const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'finalizer', 'htmlTranslator'];
+const PIPELINE_STAGES: Stage[] = ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator'];
 
 export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage, topic, error, initialInput, generateHtmlPreview, throughput }) => {
     const [activeTab, setActiveTab] = useState<Stage>('synthesizer');
@@ -83,7 +84,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
 
     const activeStagesCount = useMemo(() => {
         // Base stages that always run
-        let count = 4; // synthesizer, condenser, enhancer, finalizer
+        let count = 5; // synthesizer, condenser, enhancer, mermaidValidator, finalizer
         if (generateHtmlPreview) count++;
         return count;
     }, [generateHtmlPreview]);
@@ -118,8 +119,10 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ outputs, loadingStage,
                 return outputs.synthesizer || '';
             case 'enhancer':
                 return outputs.condenser || '';
-            case 'finalizer':
+            case 'mermaidValidator':
                 return outputs.enhancer || '';
+            case 'finalizer':
+                return outputs.mermaidValidator || '';
             case 'htmlTranslator':
                 return outputs.finalizer || '';
         }

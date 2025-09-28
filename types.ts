@@ -1,6 +1,6 @@
 import type { Packer } from 'docx';
 
-export type Stage = 'synthesizer' | 'condenser' | 'enhancer' | 'finalizer' | 'htmlTranslator';
+export type Stage = 'synthesizer' | 'condenser' | 'enhancer' | 'mermaidValidator' | 'finalizer' | 'htmlTranslator';
 
 // Provides context for where an error occurred in the application.
 export type ErrorContext = Stage | 'title_generation' | 'setup' | 'file_processing' | 'export' | 'settings' | 'network' | 'validation' | 'system';
@@ -88,6 +88,7 @@ export interface StageOutputs {
     synthesizer: string;
     condenser: string;
     enhancer: string;
+    mermaidValidator: string;
     finalizer: string;
     htmlTranslator: string;
 }
