@@ -4,7 +4,7 @@
   
   <p>
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-    <a href="https://github.com/LookUpMark/flow-ai/releases/tag/v1.0.2"><img src="https://img.shields.io/badge/version-v1.0.2-brightgreen.svg" alt="Version: v1.0.2"></a>
+    <a href="https://github.com/LookUpMark/flow-ai/releases/tag/v1.0.3"><img src="https://img.shields.io/badge/version-v1.0.3-brightgreen.svg" alt="Version: v1.0.3"></a>
     <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-19.1.1-blue.svg" alt="React"></a>
     <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.8.2-blue.svg" alt="TypeScript"></a>
     <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-6.2.0-purple.svg" alt="Vite"></a>
