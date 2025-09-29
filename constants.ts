@@ -193,25 +193,36 @@ export const STAGE_PROMPTS = {
            - Identify the diagram type (flowchart, sequenceDiagram, gantt, classDiagram, stateDiagram-v2, pie, gitGraph, journey, C4Context)
            - Verify the syntax exactly matches the corresponding pattern in MERMAID_EXAMPLES
            - Check node naming conventions, arrow syntax, and structural elements
-        4. **Mandatory Corrections:** If ANY diagram deviates from MERMAID_EXAMPLES patterns:
+        4. **CRITICAL DOUBLE QUOTES REQUIREMENT:** ALL labels, text, and node identifiers in Mermaid diagrams MUST be enclosed in double quotes ("") to prevent rendering issues with special characters:
+           - Node labels: A["Hard Text"] instead of A[Hard Text]
+           - Decision nodes: B{"Decision Text"} instead of B{Decision Text}
+           - Subroutine nodes: C(("Subroutine Text")) instead of C((Subroutine Text))
+           - Cylindrical nodes: D[("Database Text")] instead of D[(Database Text)]
+           - Text on arrows/edges: -->|"Edge Text" instead of -->|Edge Text|
+           - Pie chart labels: "Label" : value (already enforced)
+           - All text identifiers in C4Context diagrams
+        5. **Mandatory Corrections:** If ANY diagram deviates from MERMAID_EXAMPLES patterns:
            - Replace the incorrect syntax with the closest valid pattern from MERMAID_EXAMPLES
            - Preserve the semantic meaning while enforcing correct syntax
+           - Ensure ALL labels and text are enclosed in double quotes
            - Maintain all content and relationships, only fix syntax errors
-        5. **Preservation Requirements:**
+        6. **Preservation Requirements:**
            - Keep ALL non-Mermaid content exactly as received
            - Maintain all formatting, headings, text, code blocks, and LaTeX equations
            - Do NOT modify any content outside of Mermaid diagrams
            - Preserve diagram semantics while correcting syntax
-        6. **Validation Output Standards:**
+        7. **Validation Output Standards:**
            - Every validated Mermaid diagram MUST have proper \`\`\`mermaid opening and \`\`\` closing
            - All diagrams MUST follow indentation and naming conventions from MERMAID_EXAMPLES
            - No custom or invented syntax allowed - only validated patterns
-        7. **Quality Assurance:**
+           - ALL text elements MUST be enclosed in double quotes
+        8. **Quality Assurance:**
            - Double-check that corrected diagrams render without syntax errors
            - Ensure diagram logic and flow remain intact after corrections
            - Verify all Mermaid code blocks are properly delimited
-        8. **Strict Output Format:** Your entire response must be *only* the raw Markdown content with validated Mermaid diagrams. Do not include any conversational text or validation reports.
-        **Output:** The same Markdown document with ALL Mermaid diagrams guaranteed to use only validated syntax from MERMAID_EXAMPLES catalog.
+           - Confirm ALL labels and text use double quotes for maximum compatibility
+        9. **Strict Output Format:** Your entire response must be *only* the raw Markdown content with validated Mermaid diagrams. Do not include any conversational text or validation reports.
+        **Output:** The same Markdown document with ALL Mermaid diagrams guaranteed to use only validated syntax from MERMAID_EXAMPLES catalog, with ALL labels and text enclosed in double quotes for maximum rendering compatibility.
     `,
     finalizer: `
         **Role:** You are the "Obsidian Finalizer". You are an absolute expert in Obsidian and its extended Markdown syntax. Your task is the final formatting and standardization, ensuring perfect rendering and maximum utility within an Obsidian vault.
@@ -450,62 +461,62 @@ export const MERMAID_EXAMPLES = {
     flowchart: {
         syntax: `flowchart LR
 
-A[Hard] -->|Text| B(Round)
-B --> C{Decision}
-C -->|One| D[Result 1]
-C -->|Two| E[Result 2]`,
+A["Hard"] -->|"Text"| B["Round"]
+B --> C{"Decision"}
+C -->|"One"| D["Result 1"]
+C -->|"Two"| E["Result 2"]`,
         description: 'Basic flowchart with rectangular, round, and diamond shapes'
     },
     sequenceDiagram: {
         syntax: `sequenceDiagram
-Alice->>John: Hello John, how are you?
-loop HealthCheck
-    John->>John: Fight against hypochondria
+"Alice"->>"John": "Hello John, how are you?"
+loop "HealthCheck"
+    "John"->>"John": "Fight against hypochondria"
 end
-Note right of John: Rational thoughts!
-John-->>Alice: Great!
-John->>Bob: How about you?
-Bob-->>John: Jolly good!`,
+Note right of "John": "Rational thoughts!"
+"John"-->>"Alice": "Great!"
+"John"->>"Bob": "How about you?"
+"Bob"-->>"John": "Jolly good!"`,
         description: 'Sequence diagram showing message flow between participants'
     },
     ganttChart: {
         syntax: `gantt
-    section Section
-    Completed :done,    des1, 2014-01-06,2014-01-08
-    Active        :active,  des2, 2014-01-07, 3d
-    Parallel 1   :         des3, after des1, 1d
-    Parallel 2   :         des4, after des1, 1d
-    Parallel 3   :         des5, after des3, 1d
-    Parallel 4   :         des6, after des4, 1d`,
+    section "Section"
+    "Completed" :done,    des1, 2014-01-06,2014-01-08
+    "Active"        :active,  des2, 2014-01-07, 3d
+    "Parallel 1"   :         des3, after des1, 1d
+    "Parallel 2"   :         des4, after des1, 1d
+    "Parallel 3"   :         des5, after des3, 1d
+    "Parallel 4"   :         des6, after des4, 1d`,
         description: 'Gantt chart for project timeline visualization'
     },
     classDiagram: {
         syntax: `classDiagram
-Class01 <|-- AveryLongClass : Cool
-<<Interface>> Class01
-Class09 --> C2 : Where am I?
-Class09 --* C3
-Class09 --|> Class07
-Class07 : equals()
-Class07 : Object[] elementData
-Class01 : size()
-Class01 : int chimp
-Class01 : int gorilla
-class Class10 {
+"Class01" <|-- "AveryLongClass" : "Cool"
+<<Interface>> "Class01"
+"Class09" --> "C2" : "Where am I?"
+"Class09" --* "C3"
+"Class09" --|> "Class07"
+"Class07" : "equals()"
+"Class07" : "Object[] elementData"
+"Class01" : "size()"
+"Class01" : "int chimp"
+"Class01" : "int gorilla"
+class "Class10" {
   <<service>>
-  int id
-  size()
+  "int id"
+  "size()"
 }`,
         description: 'Class diagram showing inheritance and relationships'
     },
     stateDiagram: {
         syntax: `stateDiagram-v2
-[*] --> Still
-Still --> [*]
-Still --> Moving
-Moving --> Still
-Moving --> Crash
-Crash --> [*]`,
+"[*]" --> "Still"
+"Still" --> "[*]"
+"Still" --> "Moving"
+"Moving" --> "Still"
+"Moving" --> "Crash"
+"Crash" --> "[*]"`,
         description: 'State diagram showing state transitions'
     },
     pieChart: {
@@ -519,44 +530,44 @@ Crash --> [*]`,
         syntax: `gitGraph
   commit
   commit
-  branch develop
-  checkout develop
+  branch "develop"
+  checkout "develop"
   commit
   commit
-  checkout main
-  merge develop
+  checkout "main"
+  merge "develop"
   commit
   commit`,
         description: 'Git graph showing branch and merge flow'
     },
     ganttBarChart: {
         syntax: `gantt
-    title Git Issues - days since last update
+    title "Git Issues - days since last update"
     dateFormat  X
     axisFormat %s
 
-    section Issue19062
-    71   : 0, 71
-    section Issue19401
-    36   : 0, 36
-    section Issue193
-    34   : 0, 34
-    section Issue7441
-    9    : 0, 9
-    section Issue1300
-    5    : 0, 5`,
+    section "Issue19062"
+    "71"   : 0, 71
+    section "Issue19401"
+    "36"   : 0, 36
+    section "Issue193"
+    "34"   : 0, 34
+    section "Issue7441"
+    "9"    : 0, 9
+    section "Issue1300"
+    "5"    : 0, 5`,
         description: 'Gantt chart used as bar chart for metrics'
     },
     userJourney: {
         syntax: `journey
-    title My working day
-    section Go to work
-      Make tea: 5: Me
-      Go upstairs: 3: Me
-      Do work: 1: Me, Cat
-    section Go home
-      Go downstairs: 5: Me
-      Sit down: 3: Me`,
+    title "My working day"
+    section "Go to work"
+      "Make tea": 5: "Me"
+      "Go upstairs": 3: "Me"
+      "Do work": 1: "Me", "Cat"
+    section "Go home"
+      "Go downstairs": 5: "Me"
+      "Sit down": 3: "Me"`,
         description: 'User journey diagram mapping experience flow'
     },
     c4Context: {
