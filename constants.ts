@@ -160,6 +160,7 @@ export const STAGE_PROMPTS = {
                 D --> E
             \`\`\`
             CRITICAL: Every Mermaid diagram MUST have \`\`\`mermaid opening and \`\`\` closing. Never omit backticks.
+            **MANDATORY LEFT-TO-RIGHT ARROW RULE:** ALL arrows in Mermaid diagrams MUST use left-to-right notation (A --> B, A ->> B) instead of right-to-left notation (B <-- A, B -->> A). This ensures consistent flow direction across all diagrams.
         4. **Content Enhancement Standards:**
             - **Examples:** Always introduce with standardized language: "Esempio:" (IT) / "Example:" (EN)
             - **Definitions:** Format as: **Term**: Clear definition with context
@@ -201,27 +202,36 @@ export const STAGE_PROMPTS = {
            - Text on arrows/edges: -->|"Edge Text" instead of -->|Edge Text|
            - Pie chart labels: "Label" : value (already enforced)
            - All text identifiers in C4Context diagrams
-        5. **Mandatory Corrections:** If ANY diagram deviates from MERMAID_EXAMPLES patterns:
+        5. **CRITICAL LEFT-TO-RIGHT ARROW REQUIREMENT:** ALL arrows in Mermaid diagrams MUST use left-to-right notation to ensure consistent flow direction:
+           - Use A --> B instead of B <-- A
+           - Use A ->> B instead of B -->> A
+           - Use A -->> B instead of B <<-- A
+           - Use A --- B instead of B --- A
+           - Use A ==> B instead of B <== A
+           - Use A -.-> B instead of B <-.-
+           - Use A -.>> B instead of B <<-.
+           - All diagram types MUST follow left-to-right flow direction
+        6. **Mandatory Corrections:** If ANY diagram deviates from MERMAID_EXAMPLES patterns:
            - Replace the incorrect syntax with the closest valid pattern from MERMAID_EXAMPLES
            - Preserve the semantic meaning while enforcing correct syntax
            - Ensure ALL labels and text are enclosed in double quotes
            - Maintain all content and relationships, only fix syntax errors
-        6. **Preservation Requirements:**
+        7. **Preservation Requirements:**
            - Keep ALL non-Mermaid content exactly as received
            - Maintain all formatting, headings, text, code blocks, and LaTeX equations
            - Do NOT modify any content outside of Mermaid diagrams
            - Preserve diagram semantics while correcting syntax
-        7. **Validation Output Standards:**
+        8. **Validation Output Standards:**
            - Every validated Mermaid diagram MUST have proper \`\`\`mermaid opening and \`\`\` closing
            - All diagrams MUST follow indentation and naming conventions from MERMAID_EXAMPLES
            - No custom or invented syntax allowed - only validated patterns
            - ALL text elements MUST be enclosed in double quotes
-        8. **Quality Assurance:**
+        9. **Quality Assurance:**
            - Double-check that corrected diagrams render without syntax errors
            - Ensure diagram logic and flow remain intact after corrections
            - Verify all Mermaid code blocks are properly delimited
            - Confirm ALL labels and text use double quotes for maximum compatibility
-        9. **Strict Output Format:** Your entire response must be *only* the raw Markdown content with validated Mermaid diagrams. Do not include any conversational text or validation reports.
+        10. **Strict Output Format:** Your entire response must be *only* the raw Markdown content with validated Mermaid diagrams. Do not include any conversational text or validation reports.
         **Output:** The same Markdown document with ALL Mermaid diagrams guaranteed to use only validated syntax from MERMAID_EXAMPLES catalog, with ALL labels and text enclosed in double quotes for maximum rendering compatibility.
     `,
     finalizer: `
@@ -474,9 +484,9 @@ loop "HealthCheck"
     "John"->>"John": "Fight against hypochondria"
 end
 Note right of "John": "Rational thoughts!"
-"John"-->>"Alice": "Great!"
+"John"->>"Alice": "Great!"
 "John"->>"Bob": "How about you?"
-"Bob"-->>"John": "Jolly good!"`,
+"Bob"->>"John": "Jolly good!"`,
         description: 'Sequence diagram showing message flow between participants'
     },
     ganttChart: {
