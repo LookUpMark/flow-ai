@@ -109,10 +109,10 @@ const parseApiError = async (error: unknown, context: { provider?: string; endpo
 
 
 const withRetry = async <T>(apiCall: () => Promise<T>, operationName: string, context: { provider?: string; stage?: Stage } = {}): Promise<T> => {
-    const MAX_RETRIES = 3;
+    const MAX_RETRIES = 4; // Increased for better rate limit handling
     let lastError: Error | Response | null = null;
     let lastEnhancedError: any = null;
-    
+
     const startTime = performance.now();
     loggingService.startPerformanceTracking(`retry_${operationName}`, {
         operation: operationName,
@@ -123,7 +123,7 @@ const withRetry = async <T>(apiCall: () => Promise<T>, operationName: string, co
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
             const result = await apiCall();
-            
+
             // Log successful completion
             const duration = performance.now() - startTime;
             logApiCall(operationName, 'POST', duration, 200, {
@@ -131,22 +131,22 @@ const withRetry = async <T>(apiCall: () => Promise<T>, operationName: string, co
                 provider: context.provider,
                 stage: context.stage
             });
-            
+
             loggingService.endPerformanceTracking(`retry_${operationName}`, {
                 success: true,
                 attempts: attempt + 1
             });
-            
+
             return result;
         } catch (error) {
             const { message: errorMessage, enhancedError } = await parseApiError(error, {
                 provider: context.provider,
                 operation: operationName
             });
-            
+
             lastError = error instanceof Response ? error : new Error(errorMessage);
             lastEnhancedError = enhancedError;
-            
+
             loggingService.warn(
                 `Attempt ${attempt + 1} failed for ${operationName}: ${errorMessage}`,
                 'api',
@@ -161,31 +161,43 @@ const withRetry = async <T>(apiCall: () => Promise<T>, operationName: string, co
                 }
             );
 
-            const isRetryableError = errorMessage.includes('429') || 
-                                    errorMessage.includes('rate limit') || 
+            const isRetryableError = errorMessage.includes('429') ||
+                                    errorMessage.includes('rate limit') ||
                                     errorMessage.includes('RESOURCE_EXHAUSTED') ||
                                     errorMessage.includes('503') ||
                                     errorMessage.includes('UNAVAILABLE') ||
                                     errorMessage.includes('overloaded') ||
                                     errorMessage.includes('temporarily unavailable');
-            
+
             if (isRetryableError && attempt < MAX_RETRIES - 1) {
-                const backoffTime = 2000 * Math.pow(2, attempt); // 2s, 4s, 8s
+                // Use exponential backoff with jitter for rate limits
+                let backoffTime: number;
+                if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
+                    // Longer backoff for rate limits with jitter
+                    const baseDelay = 5000 * Math.pow(2, attempt); // 5s, 10s, 20s
+                    const jitter = Math.random() * 2000; // Add up to 2s random jitter
+                    backoffTime = baseDelay + jitter;
+                } else {
+                    // Standard backoff for other errors
+                    backoffTime = 2000 * Math.pow(2, attempt); // 2s, 4s, 8s
+                }
+
                 const errorType = errorMessage.includes('429') || errorMessage.includes('rate limit') ? 'rate_limit' : 'service_unavailable';
-                const logMessage = errorType === 'rate_limit' 
-                    ? `Rate limit hit for ${operationName}. Retrying in ${backoffTime / 1000}s...`
-                    : `Service temporarily unavailable for ${operationName}. Retrying in ${backoffTime / 1000}s...`;
-                
+                const logMessage = errorType === 'rate_limit'
+                    ? `Rate limit hit for ${operationName}. Retrying in ${Math.round(backoffTime / 1000)}s...`
+                    : `Service temporarily unavailable for ${operationName}. Retrying in ${Math.round(backoffTime / 1000)}s...`;
+
                 loggingService.info(
                     logMessage,
                     'api',
                     errorType,
                     {
                         operation: operationName,
-                        backoffTime,
+                        backoffTime: Math.round(backoffTime),
                         attempt: attempt + 1,
                         provider: context.provider,
-                        errorType
+                        errorType,
+                        maxRetries: MAX_RETRIES
                     }
                 );
                 await delay(backoffTime);
@@ -194,7 +206,7 @@ const withRetry = async <T>(apiCall: () => Promise<T>, operationName: string, co
             }
         }
     }
-    
+
     // Log final failure
     const duration = performance.now() - startTime;
     logApiCall(operationName, 'POST', duration, 500, {
@@ -204,13 +216,13 @@ const withRetry = async <T>(apiCall: () => Promise<T>, operationName: string, co
         stage: context.stage,
         finalError: lastEnhancedError?.code
     });
-    
+
     loggingService.endPerformanceTracking(`retry_${operationName}`, {
         success: false,
         attempts: MAX_RETRIES,
         finalErrorCode: lastEnhancedError?.code
     });
-    
+
     throw lastError!;
 };
 
@@ -250,7 +262,7 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                     
                     return response.text;
                 } catch (error) {
-                    const enhancedError = createApiError(
+                    createApiError(
                         'Failed to generate text with Gemini',
                         error,
                         {
@@ -293,7 +305,7 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                     
                     return data.choices[0].message.content;
                 } catch (error) {
-                    const enhancedError = createApiError(
+                    createApiError(
                         'Failed to generate text with OpenRouter',
                         error,
                         {
@@ -336,7 +348,7 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                     
                     return data.response;
                 } catch (error) {
-                    const enhancedError = createApiError(
+                    createApiError(
                         'Failed to generate text with Ollama',
                         error,
                         {
@@ -381,7 +393,7 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
 
                     return data.choices[0].message.content;
                 } catch (error) {
-                    const enhancedError = createApiError(
+                    createApiError(
                         'Failed to generate text with Z.ai',
                         error,
                         {
@@ -516,9 +528,9 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                     console.log('Is AbortError:', error?.name === 'AbortError');
                     console.log('baseUrl used:', baseUrl);
                     console.log('============================');
-                    
+
                     let errorMessage = 'Failed to generate text with LMStudio';
-                    
+
                     if (error instanceof TypeError && error.message.includes('fetch')) {
                         errorMessage = `Impossibile connettere a LMStudio su ${baseUrl}. Verifica che LMStudio sia in esecuzione e che il server API sia attivo.`;
                     } else if (error instanceof Error && error.name === 'AbortError') {
@@ -526,8 +538,8 @@ const generateText = async (prompt: string, settings: AppSettings, modelConfig: 
                     } else if (error instanceof Error) {
                         errorMessage = error.message;
                     }
-                    
-                    const enhancedError = createApiError(
+
+                    createApiError(
                         errorMessage,
                         error,
                         {

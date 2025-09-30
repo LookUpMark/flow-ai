@@ -158,12 +158,22 @@ const App: React.FC = () => {
 
             generateHtmlPreview
         });
-        
+
         loggingService.info('Starting knowledge pipeline', 'pipeline', 'start', {
             model: modelConfig.model,
             temperature: modelConfig.temperature,
             inputSize: combinedInput.length,
             stages: ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator']
+        });
+
+        // Start performance tracking for the entire pipeline
+        loggingService.startPerformanceTracking(pipelineId, {
+            operation: 'knowledge_pipeline',
+            provider: settings.provider,
+            modelConfig,
+            inputLength: combinedInput.length,
+            stages: ['synthesizer', 'condenser', 'enhancer', 'mermaidValidator', 'finalizer', 'htmlTranslator'],
+            generateHtmlPreview
         });
 
         let totalChars = 0;
