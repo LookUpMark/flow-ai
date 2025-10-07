@@ -18,6 +18,10 @@ export const STAGE_PROMPTS = {
         - ALWAYS use $$ for display math: $$\\int_{a}^{b} f(x) dx$$ (double dollar signs)
         - NEVER use alternative LaTeX delimiters \( \) or \[ \] - they may not render in Obsidian
         - NEVER write bare equations without delimiters (e.g., "E=mc²" is WRONG)
+        - **CRITICAL: NO SPACES between $ and equation content:**
+          * WRONG: $ 2 + 2 $ or $$ x^2 $$
+          * CORRECT: $2+2$ or $$x^2$$
+          * The $ must directly touch the first and last character of the equation
         
         **MANDATORY CODE BLOCK DELIMITERS:**
         - ALWAYS start code blocks with \`\`\`language (e.g., \`\`\`python, \`\`\`javascript)
@@ -43,6 +47,7 @@ export const STAGE_PROMPTS = {
           * Display: $$\\int_{a}^{b} f(x) dx = F(b) - F(a)$$ (use double $$)
           * WRONG: \(E = mc^2\) or \[\\int f(x) dx\]
           * CORRECT: $E = mc^2$ or $$\\int f(x) dx$$
+          * **NO SPACES**: $2+2$ is correct, $ 2 + 2 $ is WRONG
         - **Mermaid Diagrams:** MANDATORY complete syntax:
           \`\`\`mermaid
           graph TD
@@ -91,6 +96,10 @@ export const STAGE_PROMPTS = {
         - NEVER remove or alter equation delimiters
         - NEVER convert $ to \( \) or $$ to \[ \] - maintain Obsidian compatibility
         - If you find \( \) or \[ \] in input, convert to $ or $$
+        - **CRITICAL: NO SPACES between $ and equation:**
+          * Fix $ 2 + 2 $ → $2+2$
+          * Fix $$ x^2 $$ → $$x^2$$
+          * Ensure $ directly touches equation content
         
         **MANDATORY CODE BLOCK PRESERVATION:**
         - PRESERVE all triple backtick delimiters exactly as received
@@ -159,6 +168,10 @@ export const STAGE_PROMPTS = {
         - NEVER use \( \) or \[ \] - convert to $ or $$ immediately
         - ALL new equations you add MUST use $ or $$ delimiters
         - Verify EVERY equation has proper delimiters before finishing
+        - **CRITICAL: NO SPACES between $ and equation:**
+          * WRONG: $ x + y $ or $$ a^2 $$
+          * CORRECT: $x+y$ or $$a^2$$
+          * $ must directly touch the equation content
         
         **MANDATORY CODE BLOCK STANDARDS:**
         - ALWAYS use complete triple backticks: \`\`\`language ... \`\`\`
@@ -184,6 +197,7 @@ export const STAGE_PROMPTS = {
           * Matrix: $$\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$$
           * WRONG: \(\\alpha = \\beta\) or \[E = mc^2\]
           * CORRECT: $\\alpha = \\beta$ or $$E = mc^2$$
+          * **NO SPACES**: $x+y$ not $ x + y $
         - **Code Block Standards:** MANDATORY complete triple backtick syntax:
           \`\`\`python
           def function_name(parameter):
@@ -269,6 +283,7 @@ export const STAGE_PROMPTS = {
         
         **MANDATORY NON-MERMAID CONTENT PRESERVATION:**
         - PRESERVE all $ and $$ equation delimiters exactly as received
+        - **CRITICAL: Equations must have NO SPACES between $ and content:** $x+y$ not $ x+y $
         - PRESERVE all triple backtick code blocks exactly as received
         - NEVER modify equations, code blocks, or any non-Mermaid content
         - ONLY validate and correct Mermaid diagram syntax
@@ -319,7 +334,7 @@ export const STAGE_PROMPTS = {
            - Ensure diagram logic and flow remain intact after corrections
            - Verify all Mermaid code blocks are properly delimited with triple backticks
            - Confirm ALL labels and text use double quotes for maximum compatibility
-           - VERIFY all equations still have $ or $$ delimiters (no changes to equations)
+           - VERIFY all equations still have $ or $$ delimiters with NO SPACES (no changes to equations)
            - VERIFY all code blocks still have triple backticks (no changes to code)
         11. **Strict Output Format:** Your entire response must be *only* the raw Markdown content with validated Mermaid diagrams. Do not include any conversational text or validation reports.
         **Output:** The same Markdown document with ALL Mermaid diagrams guaranteed to use only validated syntax from MERMAID_EXAMPLES catalog, ALL labels and text enclosed in double quotes, and ALL non-Mermaid content (equations, code blocks) preserved exactly as received.
@@ -355,6 +370,10 @@ export const STAGE_PROMPTS = {
         4. NEVER use alternative LaTeX delimiters like \( \) or \[ \] - ALWAYS convert them to $ or $$
         5. ALWAYS check every single equation has its $ delimiters
         6. If you find ANY equation without $ delimiters, YOU MUST ADD THEM IMMEDIATELY
+        7. **CRITICAL: NO SPACES between $ and equation content:**
+           * WRONG: $ 2 + 2 $ or $$ x^2 $$
+           * CORRECT: $2+2$ or $$x^2$$
+           * Remove any spaces: $ E=mc^2 $ → $E=mc^2$
         
         **CRITICAL DELIMITER CONVERSION RULES:**
         - Convert \(equation\) → $equation$ (inline math with parentheses to dollar signs)
@@ -372,10 +391,13 @@ export const STAGE_PROMPTS = {
           * Examples of correct display math: The integral $$\\int_0^1 x^2 dx = \\frac{1}{3}$$ evaluates to one third
           * **WRONG (alternative delimiters):** \(\\dot{\\mathbf{x}} = \\mathbf{f}(\\mathbf{x})\) or \[E = mc^2\]
           * **CORRECT (Obsidian delimiters):** $\\dot{\\mathbf{x}} = \\mathbf{f}(\\mathbf{x})$ or $$E = mc^2$$
+          * **WRONG (spaces):** $ E = mc^2 $ or $$ x^2 $$
+          * **CORRECT (no spaces):** $E=mc^2$ or $$x^2$$
           * **Conversion examples:**
             - \(\\mathbf{u} = \\mathbf{0}\) → $\\mathbf{u} = \\mathbf{0}$
             - \(\\|x(t_0) - x_e\\| < \\delta_0\) → $\\|x(t_0) - x_e\\| < \\delta_0$
             - \[\\int_{a}^{b} f(x) dx\] → $$\\int_{a}^{b} f(x) dx$$
+            - $ 2 + 2 $ → $2+2$ (remove spaces)
         - **Mermaid Diagrams:** Optimize for Obsidian's Mermaid plugin using ONLY the validated syntax from MERMAID_EXAMPLES constant:
           \`\`\`mermaid
           %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ff0000'}}}%%
@@ -413,6 +435,10 @@ export const STAGE_PROMPTS = {
               * Replace ALL \(equation\) with $equation$ (inline math)
               * Replace ALL \[equation\] with $$equation$$ (display math)
               * These alternative delimiters DO NOT render properly in Obsidian
+            - **CRITICAL: NO SPACES between $ and equation content:**
+              * WRONG: $ E=mc^2 $ or $$ x^2 $$
+              * CORRECT: $E=mc^2$ or $$x^2$$
+              * $ must directly touch equation content
             - Look for common patterns: "E=mc²", "a²+b²=c²", "f(x)=...", "∫", "Σ", "α", "β", etc.
             - These MUST become: "$E=mc^2$", "$a^2+b^2=c^2$", "$f(x)=...$", "$\\int$", "$\\sum$", "$\\alpha$", "$\\beta$", etc.
             - Search for escaped parentheses: \( and \) - these indicate alternative LaTeX inline delimiters
@@ -426,11 +452,16 @@ export const STAGE_PROMPTS = {
               * Find and replace ALL instances of \(equation\) with $equation$
               * Find and replace ALL instances of \[equation\] with $$equation$$
               * Obsidian's MathJax implementation works best with $ and $$ delimiters
+            - **CRITICAL: Remove ALL spaces between $ and equation content:**
+              * Fix $ E=mc^2 $ → $E=mc^2$
+              * Fix $$ x^2 $$ → $$x^2$$
+              * $ must directly touch equation content with NO spaces
             - Verify Mermaid diagrams have consistent indentation and valid syntax using ONLY patterns from MERMAID_EXAMPLES constant WITH proper backticks
             - Validate table formatting with proper column alignment
             - NEVER allow any code block without complete backtick delimiters
             - NEVER allow any equation without dollar sign delimiters
             - NEVER allow alternative delimiters \( \) or \[ \] - always convert to $ or $$
+            - NEVER allow spaces between $ and equation content
             - Double-check mathematical expressions in text: if you see formulas like "x²+y²", convert to "$x^2+y^2$"
             
         3. **Apply Obsidian-Specific Syntax with EXACT Standards:**
@@ -474,6 +505,10 @@ export const STAGE_PROMPTS = {
             - CRITICAL: Perform final scan for ANY code block missing backticks - ADD THEM if found
             - CRITICAL: Perform final scan for ANY equation missing $ delimiters - ADD THEM if found
             - **CRITICAL: Perform final scan for alternative LaTeX delimiters \( \) and \[ \] - CONVERT THEM to $ or $$**
+            - **CRITICAL: Perform final scan for spaces between $ and equation content:**
+              * Fix $ E=mc^2 $ → $E=mc^2$
+              * Fix $$ x^2 $$ → $$x^2$$
+              * $ must directly touch equation content with NO spaces
             - Verify Mermaid diagrams use valid syntax from MERMAID_EXAMPLES constant and proper theming WITH complete backticks
             - Ensure internal links follow Obsidian conventions
             - Check that all callouts use proper Obsidian syntax
@@ -481,6 +516,7 @@ export const STAGE_PROMPTS = {
             - NEVER allow malformed code blocks that would break rendering
             - NEVER allow bare equations without $ delimiters that would not render as math
             - NEVER allow alternative delimiters \( \) or \[ \] in the final output
+            - NEVER allow spaces between $ and equation content
             - Search for common equation indicators (=, ², ³, ∫, Σ, π, α, β, γ, etc.) and ensure they're wrapped in $ if they're formulas
             
         7. **Cross-Reference Integration:** Add relevant links to create knowledge network:
@@ -496,6 +532,7 @@ export const STAGE_PROMPTS = {
         ✓ Every Mermaid diagram has \`\`\`mermaid opening and \`\`\` closing - NO EXCEPTIONS
         ✓ Every mathematical equation has $ or $$ delimiters - NO EXCEPTIONS
         ✓ NO alternative LaTeX delimiters \( \) or \[ \] exist - ALL must be converted to $ or $$
+        ✓ NO spaces between $ and equation content - Fix $ x $ → $x$
         ✓ No bare formulas or equations without $ delimiters exist in the text
         ✓ No code snippets without triple backticks exist in the text
         If ANY of these checks fail, FIX the issues IMMEDIATELY before submitting your output.
@@ -514,6 +551,7 @@ export const STAGE_PROMPTS = {
           * Inline equations: render $\\alpha = \\frac{\\beta}{\\gamma}$ properly 
           * Display equations: center $$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$
           * Matrix support: $$\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$$
+          * **CRITICAL: NO SPACES between $ and equation content** - $x+y$ not $ x+y $
           * Proper escaping and font scaling for different screen sizes
         - **Mermaid Diagrams Optimization:**
           * Use consistent theme and styling
