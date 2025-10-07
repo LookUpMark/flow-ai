@@ -9,7 +9,7 @@ services:
     ports:
       - "5174:5174"
     volumes:
-      - .:/app
+      - .:/app:U
       - /app/node_modules
     environment:
       - NODE_ENV=development
