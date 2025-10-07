@@ -326,6 +326,63 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                         </select>
                     </div>
 
+                    {/* Global Settings */}
+                    <div className="space-y-4 bg-muted/30 rounded-lg p-4">
+                        <h3 className="text-sm font-semibold text-muted-foreground">Opzioni Globali</h3>
+                        
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <label htmlFor="streaming-toggle" className="text-sm font-medium cursor-pointer">
+                                    Abilita Streaming
+                                </label>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Mostra il testo mentre viene generato. Disabilita per modelli che non supportano lo streaming.
+                                </p>
+                            </div>
+                            <button
+                                id="streaming-toggle"
+                                role="switch"
+                                aria-checked={localSettings.streamingEnabled}
+                                onClick={() => setLocalSettings(prev => ({ ...prev, streamingEnabled: !prev.streamingEnabled }))}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                                    localSettings.streamingEnabled ? 'bg-primary' : 'bg-input'
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
+                                        localSettings.streamingEnabled ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <label htmlFor="reasoning-toggle" className="text-sm font-medium cursor-pointer">
+                                    Modalità Ragionamento
+                                </label>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Consente al modello di "pensare" prima di rispondere per risultati più accurati.
+                                </p>
+                            </div>
+                            <button
+                                id="reasoning-toggle"
+                                role="switch"
+                                aria-checked={localSettings.reasoningModeEnabled}
+                                onClick={() => setLocalSettings(prev => ({ ...prev, reasoningModeEnabled: !prev.reasoningModeEnabled }))}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                                    localSettings.reasoningModeEnabled ? 'bg-primary' : 'bg-input'
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
+                                        localSettings.reasoningModeEnabled ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                />
+                            </button>
+                        </div>
+                    </div>
+
                     <div className="border-b border-border -mx-6"></div>
 
                     {localSettings.provider === 'gemini' && (

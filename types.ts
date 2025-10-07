@@ -136,6 +136,7 @@ export interface AppSettings {
     provider: ApiProvider;
     config: ProviderSettings;
     reasoningModeEnabled: boolean;
+    streamingEnabled: boolean;
 }
 
 // Supported output languages for generated text

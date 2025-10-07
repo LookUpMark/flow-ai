@@ -597,6 +597,13 @@ async function* generateTextStream(prompt: string, settings: AppSettings, modelC
         }
     }
 
+    // If streaming is disabled, use non-streaming generation and yield the complete result
+    if (!settings.streamingEnabled) {
+        const fullText = await generateText(prompt, settings, modelConfig, baseTemperature);
+        yield fullText;
+        return;
+    }
+
     switch (settings.provider) {
         case 'gemini': {
             const ai = getGeminiClient(settings);

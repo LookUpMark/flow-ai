@@ -26,7 +26,8 @@ const DEFAULTS: AppSettings = {
             selectedModel: '',
         },
     },
-    reasoningModeEnabled: true,
+    reasoningModeEnabled: false,
+    streamingEnabled: false,
 };
 
 const SETTINGS_KEY = 'flowai-settings';
